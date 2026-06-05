@@ -3,306 +3,371 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Joy & Ticoh - Heart First Sequence</title>
+    <title>3D Smart-Reset Beverage Carousel</title>
     <style>
         * {
+            box-sizing: border-box;
             margin: 0;
             padding: 0;
-            box-sizing: border-box;
+            user-select: none;
+            -webkit-user-drag: none;
         }
-        body, html {
+
+        body {
+            background-color: #0b0b0b;
+            color: #fff;
+            font-family: system-ui, -apple-system, sans-serif;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+            touch-action: none;
+        }
+
+        h1 {
+            margin-bottom: 60px;
+            text-transform: uppercase;
+            letter-spacing: 3px;
+            font-size: 2rem;
+            text-align: center;
+        }
+
+        .scene {
+            width: 300px;
+            height: 380px;
+            perspective: 1200px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .carousel {
             width: 100%;
             height: 100%;
-            overflow: hidden;
-            background-color: #030303;
-            font-family: sans-serif;
+            position: absolute;
+            transform-style: preserve-3d;
         }
-        canvas {
-            display: block;
-            width: 100vw;
-            height: 100vh;
+
+        .card-container {
+            position: absolute;
+            width: 260px;
+            height: 360px;
+            left: 20px;
+            top: 10px;
+            transform-style: preserve-3d;
+            transition: opacity 0.3s, filter 0.3s;
+            cursor: grab;
+        }
+
+        .card-container:active {
+            cursor: grabbing;
+        }
+
+        .card-flipper {
+            width: 100%;
+            height: 100%;
+            position: relative;
+            transform-style: preserve-3d;
+            transition: transform 0.8s cubic-bezier(0.2, 1, 0.3, 1); 
+        }
+
+        .card-face {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            backface-visibility: hidden; 
+            -webkit-backface-visibility: hidden;
+            border-radius: 24px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: space-between;
+            padding: 35px 20px;
+            box-shadow: 0 25px 50px rgba(0,0,0,0.8);
+        }
+
+        /* Front Face */
+        .card-front {
+            background: linear-gradient(135deg, #1e1e1e, #111111);
+            border: 2px solid rgba(255,255,255,0.1);
+        }
+
+        .card-front h2 {
+            font-size: 2.2rem;
+            font-weight: 800;
+            text-transform: uppercase;
+        }
+
+        .bottle-placeholder {
+            width: 85px;
+            height: 190px;
+            background: rgba(255,255,255,0.04);
+            border-radius: 18px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border: 2px dashed rgba(255,255,255,0.15);
+            font-size: 0.8rem;
+            color: #777;
+        }
+
+        /* Back Face */
+        .card-back {
+            transform: rotateY(180deg); 
+            justify-content: center;
+        }
+
+        .card-back p {
+            font-size: 1.4rem;
+            line-height: 1.6;
+            font-weight: 600;
+            text-align: center;
+            font-style: italic;
+            padding: 0 15px;
+        }
+
+        /* Brand Colors */
+        .coca-cola .card-front h2 { color: #e60000; }
+        .coca-cola .card-back { background: radial-gradient(circle, #df0000 0%, #200000 100%); border: 2px solid #df0000; }
+        
+        .sprite .card-front h2 { color: #00b359; }
+        .sprite .card-back { background: radial-gradient(circle, #00ab55 0%, #001a0d 100%); border: 2px solid #00ab55; }
+
+        .fanta .card-front h2 { color: #ff8000; }
+        .fanta .card-back { background: radial-gradient(circle, #ff8000 0%, #2b1600 100%); border: 2px solid #ff8000; }
+
+        .stoney .card-front h2 { color: #a16a35; }
+        .stoney .card-back { background: radial-gradient(circle, #8a5524 0%, #1a0f05 100%); border: 2px solid #8a5524; }
+
+        .krest .card-front h2 { color: #f2f612; }
+        .krest .card-back { background: radial-gradient(circle, #ccd30c 0%, #222401 100%); border: 2px solid #ccd30c; color: #000; }
+
+        .instructions {
+            margin-top: 50px;
+            text-align: center;
+            color: #555;
+            font-size: 0.9rem;
+            line-height: 1.6;
         }
     </style>
 </head>
 <body>
 
-    <canvas id="particleCanvas"></canvas>
+    <h1>Beverage Collection</h1>
+
+    <div class="scene">
+        <div class="carousel">
+            
+            <div class="card-container coca-cola">
+                <div class="card-flipper">
+                    <div class="card-face card-front">
+                        <h2>Coca-Cola</h2>
+                        <div class="bottle-placeholder">[ Bottle Image ]</div>
+                        <div></div>
+                    </div>
+                    <div class="card-face card-back">
+                        <p>"Real Magic.<br>Taste the Feeling!"</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card-container sprite">
+                <div class="card-flipper">
+                    <div class="card-face card-front">
+                        <h2>Sprite</h2>
+                        <div class="bottle-placeholder">[ Bottle Image ]</div>
+                        <div></div>
+                    </div>
+                    <div class="card-face card-back">
+                        <p>"Heat Happens.<br>Stay Cool."</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card-container fanta">
+                <div class="card-flipper">
+                    <div class="card-face card-front">
+                        <h2>Fanta</h2>
+                        <div class="bottle-placeholder">[ Bottle Image ]</div>
+                        <div></div>
+                    </div>
+                    <div class="card-face card-back">
+                        <p>"Wanta Fanta?<br>Be More Flavors!"</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card-container stoney">
+                <div class="card-flipper">
+                    <div class="card-face card-front">
+                        <h2>Stoney</h2>
+                        <div class="bottle-placeholder">[ Bottle Image ]</div>
+                        <div></div>
+                    </div>
+                    <div class="card-face card-back">
+                        <p>"Kwenda Na Nyuki!<br>Feel the Ginger Kick."</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card-container krest">
+                <div class="card-flipper">
+                    <div class="card-face card-front">
+                        <h2>Krest</h2>
+                        <div class="bottle-placeholder">[ Bottle Image ]</div>
+                        <div></div>
+                    </div>
+                    <div class="card-face card-back">
+                        <p>"The Sharp,<br>Bitter Lemon Mixer."</p>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+    <div class="instructions">
+        <p>← Flick or swipe to slide →</p>
+        <p>Tap a card to view its ad words. Sliding resets hidden cards back to front automatically!</p>
+    </div>
 
     <script>
-        const canvas = document.getElementById('particleCanvas');
-        const ctx = canvas.getContext('2d');
-
-        const PARTICLE_COUNT = 9500;
-        const COLORS = [
-            'rgba(255, 40, 100, 0.95)',   // Hot Pink
-            'rgba(40, 255, 140, 0.95)',   // Neon Green
-            'rgba(190, 60, 255, 0.95)',   // Purple
-            'rgba(255, 210, 40, 0.95)',   // Gold Yellow
-            'rgba(40, 230, 255, 0.95)'    // Electric Cyan
-        ];
-
-        let width = canvas.width = window.innerWidth;
-        let height = canvas.height = window.innerHeight;
+        const carousel = document.querySelector('.carousel');
+        const cards = document.querySelectorAll('.card-container');
+        const totalCards = cards.length;
         
-        // --- Corrected Choreography States ---
-        // 0 = Scattered Stars Drift (1.5s)
-        // 1 = Laser Draws the Heart Shape out of the stars
-        // 2 = Heart completed -> Names "Joy" and "Ticoh" form INSIDE
-        // 3 = Full Screen Explosion
-        let currentState = 0; 
-        let stateTimer = 0;
-        let particles = [];
+        const angle = 360 / totalCards;
+        const tz = Math.round((260 / 2) / Math.tan(Math.PI / totalCards)) + 60; 
+
+        let isDragging = false;
+        let startX = 0;
+        let currentX = 0;
         
-        let laserProgress = 0;
-        let heartScale = Math.min(width, height) / 38;
+        let baseCarouselAngle = 0;
+        let targetCarouselAngle = 0;
+        let velocity = 0;
+        let lastEventTime = 0;
+        let lastEventX = 0;
 
-        const targets = {
-            joy: [],
-            ticoh: [],
-            heartOutline: []
-        };
+        // Track unique degrees per card
+        const flipRotations = Array(totalCards).fill(0);
 
-        function getHeartPoint(t, scale) {
-            const x = 16 * Math.pow(Math.sin(t), 3);
-            const y = 13 * Math.cos(t) - 5 * Math.cos(2*t) - 2 * Math.cos(3*t) - Math.cos(4*t);
-            return { x: x * scale, y: -y * scale };
-        }
+        function updateCarouselStructure() {
+            carousel.style.transform = `translateZ(-${tz}px) rotateY(${baseCarouselAngle}deg)`;
 
-        function generateTargets() {
-            targets.joy = [];
-            targets.ticoh = [];
-            targets.heartOutline = [];
-
-            width = canvas.width = window.innerWidth;
-            height = canvas.height = window.innerHeight;
-            heartScale = Math.min(width, height) / 38;
-
-            const offCanvas = document.createElement('canvas');
-            const offCtx = offCanvas.getContext('2d');
-            offCanvas.width = width;
-            offCanvas.height = height;
-
-            // Make text sizes neat and fits nicely inside the heart halves
-            const fontSize = Math.min(width / 14, 45);
-            offCtx.font = `bold ${fontSize}px sans-serif`;
-            offCtx.fillStyle = '#ffffff';
-            offCtx.textBaseline = 'middle';
-
-            // Joy position (Left inner chamber)
-            offCtx.textAlign = 'right';
-            offCtx.fillText("Joy", width / 2 - (heartScale * 2.5), height / 2);
-
-            // Ticoh position (Right inner chamber)
-            offCtx.textAlign = 'left';
-            offCtx.fillText("Ticoh", width / 2 + (heartScale * 2.5), height / 2);
-
-            try {
-                const imgData = offCtx.getImageData(0, 0, width, height).data;
-                const step = 2; 
-
-                for (let y = 0; y < height; y += step) {
-                    for (let x = 0; x < width; x += step) {
-                        const index = (y * width + x) * 4;
-                        if (imgData[index] > 200) {
-                            if (x < width / 2) {
-                                targets.joy.push({ x: x, y: y });
-                            } else {
-                                targets.ticoh.push({ x: x, y: y });
-                            }
-                        }
-                    }
-                }
-            } catch (e) {
-                console.error(e);
-            }
-
-            // Map out the outer structural heart line loop arrays
-            for (let i = 0; i < PARTICLE_COUNT; i++) {
-                const t = Math.PI * 2 * (i / PARTICLE_COUNT);
-                const pt = getHeartPoint(t, heartScale);
-                targets.heartOutline.push({
-                    x: width / 2 + pt.x,
-                    y: height / 2 + pt.y
-                });
-            }
-
-            targets.joy.sort(() => Math.random() - 0.5);
-            targets.ticoh.sort(() => Math.random() - 0.5);
-        }
-
-        class Particle {
-            constructor() {
-                this.x = Math.random() * width;
-                this.y = Math.random() * height;
-                this.vx = (Math.random() - 0.5) * 3;
-                this.vy = (Math.random() - 0.5) * 3;
-                this.radius = Math.random() * 1.5 + 0.6;
-                this.color = COLORS[Math.floor(Math.random() * COLORS.length)];
-                this.ease = 0.08;
-            }
-
-            update(index) {
-                if (currentState === 0) {
-                    // Phase 0: 1.5s Scattered stars drifting peacefully
-                    this.vx *= 0.99;
-                    this.vy *= 0.99;
-                    if (this.x < 0 || this.x > width) this.vx *= -1;
-                    if (this.y < 0 || this.y > height) this.vy *= -1;
-                }
-                else if (currentState === 1) {
-                    // Phase 1: Stars pull into the drawing outline of the heart
-                    const hIndex = index % targets.heartOutline.length;
-                    const target = targets.heartOutline[hIndex];
-                    
-                    this.vx += (target.x - this.x) * (this.ease * 0.8);
-                    this.vy += (target.y - this.y) * (this.ease * 0.8);
-                    this.vx *= 0.84;
-                    this.vy *= 0.84;
-                }
-                else if (currentState === 2) {
-                    // Phase 2: Heart is full. Remaining internal particles pull together into names inside
-                    let target;
-                    // Allocate share of particles into the internal text forms
-                    if (index < targets.joy.length) {
-                        target = targets.joy[index];
-                    } else if (index < targets.joy.length + targets.ticoh.length) {
-                        target = targets.ticoh[index - targets.joy.length];
-                    } else {
-                        // The rest maintain the beating outer heart shape wrapper
-                        target = targets.heartOutline[index % targets.heartOutline.length];
-                    }
-
-                    if (target) {
-                        const beat = 1 + Math.sin(Date.now() * 0.005) * 0.03;
-                        const centerX = width / 2;
-                        const centerY = height / 2;
-                        
-                        const dynamicX = centerX + (target.x - centerX) * beat;
-                        const dynamicY = centerY + (target.y - centerY) * beat;
-
-                        this.vx += (dynamicX - this.x) * this.ease;
-                        this.vy += (dynamicY - this.y) * this.ease;
-                    }
-                    this.vx *= 0.83;
-                    this.vy *= 0.83;
-                }
-                else if (currentState === 3) {
-                    // Phase 3: Blast out over the entire window screen space
-                    this.vx *= 0.99; 
-                    this.vy *= 0.99;
-                    if (this.x < 0 || this.x > width) this.vx *= -1;
-                    if (this.y < 0 || this.y > height) this.vy *= -1;
-                }
-
-                this.x += this.vx;
-                this.y += this.vy;
-            }
-
-            draw() {
-                ctx.beginPath();
-                ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2);
-                ctx.fillStyle = this.color;
-                ctx.fill();
-            }
-
-            explode() {
-                const angle = Math.random() * Math.PI * 2;
-                const force = Math.random() * 25 + 8; 
-                this.vx = Math.cos(angle) * force;
-                this.vy = Math.sin(angle) * force;
-            }
-
-            resetDrift() {
-                this.vx = (Math.random() - 0.5) * 3;
-                this.vy = (Math.random() - 0.5) * 3;
-            }
-        }
-
-        function init() {
-            generateTargets();
-            particles = [];
-            for (let i = 0; i < PARTICLE_COUNT; i++) {
-                particles.push(new Particle());
-            }
-            animate();
-        }
-
-        window.addEventListener('load', init);
-        window.addEventListener('resize', generateTargets);
-
-        function animate() {
-            ctx.fillStyle = 'rgba(3, 3, 3, 0.22)';
-            ctx.fillRect(0, 0, width, height);
-
-            stateTimer++;
-
-            // --- Story Loop Timing Calculations ---
-            if (currentState === 0 && stateTimer > 90) {
-                // Step 1: 1.5 Seconds scattered stars drift finishes -> Laser starts drawing heart
-                currentState = 1;
-                stateTimer = 0;
-                laserProgress = 0;
-            } 
-            else if (currentState === 1 && laserProgress >= Math.PI * 2) {
-                // Step 2: Once the laser fully finishes the perimeter line -> Names form inside
-                currentState = 2;
-                stateTimer = 0;
-            }
-            else if (currentState === 2 && stateTimer > 360) {
-                // Step 3: Keep heart and inner names active on screen for 6 seconds -> Explode
-                currentState = 3;
-                stateTimer = 0;
-                particles.forEach(p => p.explode());
-            }
-            else if (currentState === 3 && stateTimer > 120) {
-                // Step 4: 2 Seconds explosion sequence completes -> Go back to drifting stars
-                currentState = 0;
-                stateTimer = 0;
-                particles.forEach(p => p.resetDrift());
-            }
-
-            // --- Update and Render Particles ---
-            for (let i = 0; i < particles.length; i++) {
-                particles[i].update(i);
-                particles[i].draw();
-            }
-
-            // --- Active Neon Laser Writer Brush ---
-            if (currentState === 1 || currentState === 2) {
-                if (currentState === 1) {
-                    laserProgress += 0.045; // Smooth incremental stroke draw rate speed
-                } else {
-                    laserProgress = Math.PI * 2; // Locked fully completed loop ring
-                }
-
-                ctx.save();
-                ctx.lineWidth = 4.5;
-                ctx.lineCap = 'round';
+            cards.forEach((card, i) => {
+                const cardAngle = angle * i;
                 
-                // Neon glow blur specs
-                ctx.shadowBlur = 18;
-                ctx.shadowColor = '#ff2864'; 
+                let relativeAngle = (cardAngle + (baseCarouselAngle % 360)) % 360;
+                if (relativeAngle > 180) relativeAngle -= 360;
+                if (relativeAngle < -180) relativeAngle += 360;
 
-                ctx.beginPath();
-                for (let t = 0; t <= laserProgress; t += 0.02) {
-                    const pt = getHeartPoint(t - Math.PI, heartScale);
-                    const lx = width / 2 + pt.x;
-                    const ly = height / 2 + pt.y;
-                    
-                    if (t === 0) {
-                        ctx.moveTo(lx, ly);
-                    } else {
-                        ctx.lineTo(lx, ly);
-                    }
+                const distanceFactor = Math.abs(relativeAngle) / 180; 
+                const scale = 1.35 - (distanceFactor * 0.65);
+                const opacity = 1.0 - (distanceFactor * 0.75);
+                
+                const isFrontCard = Math.abs(relativeAngle) < (angle / 2);
+
+                card.style.transform = `rotateY(${cardAngle}deg) translateZ(${tz}px) scale(${scale})`;
+                card.style.opacity = opacity;
+                card.style.pointerEvents = isFrontCard ? 'auto' : 'none';
+            });
+        }
+
+        // Checks and resets cards that are currently flipped over in the background
+        function autoResetBackgroundCards(activeIndex) {
+            cards.forEach((card, idx) => {
+                // If it's a background card and it's currently on its back side (odd multiple of 180)
+                if (idx !== activeIndex && (flipRotations[idx] / 180) % 2 !== 0) {
+                    // Complete the rotation to a multiple of 360 to smoothly snap it back to the front
+                    flipRotations[idx] += 180;
+                    const flipper = card.querySelector('.card-flipper');
+                    flipper.style.transform = `rotateY(${flipRotations[idx]}deg)`;
+                }
+            });
+        }
+
+        function physicsTick() {
+            if (!isDragging) {
+                baseCarouselAngle += velocity;
+                velocity *= 0.92; 
+
+                if (Math.abs(velocity) < 0.1) {
+                    velocity = 0;
+                    const snapSlot = Math.round(-baseCarouselAngle / angle);
+                    targetCarouselAngle = -snapSlot * angle;
+                    baseCarouselAngle += (targetCarouselAngle - baseCarouselAngle) * 0.15;
+
+                    // Trigger automatic forward correction when the card settles into place
+                    const activeIndex = ((snapSlot % totalCards) + totalCards) % totalCards;
+                    autoResetBackgroundCards(activeIndex);
                 }
                 
-                ctx.strokeStyle = 'rgba(255, 60, 160, 0.95)';
-                ctx.stroke();
-                ctx.restore();
+                updateCarouselStructure();
+            }
+            requestAnimationFrame(physicsTick);
+        }
+
+        window.addEventListener('pointerdown', (e) => {
+            if (e.target.closest('.scene') || e.target.closest('.instructions')) {
+                isDragging = true;
+                velocity = 0;
+                startX = e.clientX;
+                currentX = startX;
+                lastEventX = e.clientX;
+                lastEventTime = performance.now();
+            }
+        });
+
+        window.addEventListener('pointermove', (e) => {
+            if (!isDragging) return;
+            
+            const now = performance.now();
+            const x = e.clientX;
+            const deltaX = x - currentX;
+            currentX = x;
+
+            const timeDelta = now - lastEventTime;
+            if (timeDelta > 0) {
+                velocity = ((x - lastEventX) * 0.35) / (timeDelta / 16.66); 
             }
 
-            requestAnimationFrame(animate);
-        }
+            lastEventX = x;
+            lastEventTime = now;
+
+            baseCarouselAngle += deltaX * 0.35; 
+            updateCarouselStructure();
+        });
+
+        window.addEventListener('pointerup', (e) => {
+            if (!isDragging) return;
+            isDragging = false;
+
+            if (performance.now() - lastEventTime > 100) {
+                velocity = 0;
+            }
+
+            velocity = Math.max(-15, Math.min(15, velocity));
+
+            // Separation logic for clicks
+            const travelDistance = Math.abs(currentX - startX);
+            if (travelDistance < 5) {
+                const clickedCard = e.target.closest('.card-container');
+                if (clickedCard) {
+                    const index = Array.from(cards).indexOf(clickedCard);
+                    const flipper = clickedCard.querySelector('.card-flipper');
+
+                    // Standard 180-degree swap flipping mechanism
+                    flipRotations[index] += 180; 
+                    flipper.style.transform = `rotateY(${flipRotations[index]}deg)`;
+                }
+            }
+        });
+
+        updateCarouselStructure();
+        requestAnimationFrame(physicsTick);
     </script>
 </body>
 </html>
