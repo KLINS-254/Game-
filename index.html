@@ -48,7 +48,6 @@
             height: 100%;
             position: absolute;
             transform-style: preserve-3d;
-            /* Transition removed here because physics engine manages smooth motion frames */
         }
 
         .card-container {
@@ -71,7 +70,7 @@
             height: 100%;
             position: relative;
             transform-style: preserve-3d;
-            transition: transform 0.8s cubic-bezier(0.2, 1, 0.3, 1); /* Controls the 360 spin feel */
+            transition: transform 0.8s cubic-bezier(0.2, 1, 0.3, 1); 
         }
 
         .card-face {
@@ -230,8 +229,8 @@
     </div>
 
     <div class="instructions">
-        <p>← Flick or swipe with speed to slide with momentum →</p>
-        <p>Tap the center card to perform a full 360° flip</p>
+        <p>← Flick or swipe with speed to slide →</p>
+        <p>Tap the center card to perform a full 360° spin back to itself!</p>
     </div>
 
     <script>
@@ -242,7 +241,6 @@
         const angle = 360 / totalCards;
         const tz = Math.round((260 / 2) / Math.tan(Math.PI / totalCards)) + 60; 
 
-        // Physics State Variables
         let isDragging = false;
         let startX = 0;
         let currentX = 0;
@@ -253,10 +251,9 @@
         let lastEventTime = 0;
         let lastEventX = 0;
 
-        // Tracks unique continuous rotations per card to ensure true 360 progress
+        // Tracks unique rotation values per card individually
         const flipRotations = Array(totalCards).fill(0);
 
-        // Core Render Engine
         function updateCarouselStructure() {
             carousel.style.transform = `translateZ(-${tz}px) rotateY(${baseCarouselAngle}deg)`;
 
@@ -267,7 +264,6 @@
                 if (relativeAngle > 180) relativeAngle -= 360;
                 if (relativeAngle < -180) relativeAngle += 360;
 
-                // Scale Curves: Front card turns massive (1.35x), background items recede (0.7x)
                 const distanceFactor = Math.abs(relativeAngle) / 180; 
                 const scale = 1.35 - (distanceFactor * 0.65);
                 const opacity = 1.0 - (distanceFactor * 0.75);
@@ -280,20 +276,15 @@
             });
         }
 
-        // Inertia Physics Animation Loop
         function physicsTick() {
             if (!isDragging) {
-                // Apply friction decrescendo
                 baseCarouselAngle += velocity;
-                velocity *= 0.92; // Friction rate (lower = stops faster)
+                velocity *= 0.92; 
 
-                // When velocity drops significantly, snap accurately to the closest card
                 if (Math.abs(velocity) < 0.1) {
                     velocity = 0;
                     const snapSlot = Math.round(-baseCarouselAngle / angle);
                     targetCarouselAngle = -snapSlot * angle;
-                    
-                    // Smooth lerp adjustment to the final snap destination
                     baseCarouselAngle += (targetCarouselAngle - baseCarouselAngle) * 0.15;
                 }
                 
@@ -302,7 +293,6 @@
             requestAnimationFrame(physicsTick);
         }
 
-        // Pointer System Interactions
         window.addEventListener('pointerdown', (e) => {
             if (e.target.closest('.scene') || e.target.closest('.instructions')) {
                 isDragging = true;
@@ -322,10 +312,8 @@
             const deltaX = x - currentX;
             currentX = x;
 
-            // Calculate instantaneous input speed for flick physics
             const timeDelta = now - lastEventTime;
             if (timeDelta > 0) {
-                // Degrees moved per millisecond
                 velocity = ((x - lastEventX) * 0.35) / (timeDelta / 16.66); 
             }
 
@@ -340,32 +328,36 @@
             if (!isDragging) return;
             isDragging = false;
 
-            // If the user drags and holds still before releasing, kill the velocity
             if (performance.now() - lastEventTime > 100) {
                 velocity = 0;
             }
 
-            // Cap maximum physics flick velocity to prevent endless chaotic spinning
             velocity = Math.max(-15, Math.min(15, velocity));
 
-            // Tap Detection
+            // Click/Tap Verification
             const travelDistance = Math.abs(currentX - startX);
             if (travelDistance < 5) {
                 const clickedCard = e.target.closest('.card-container');
-                if (clickedCard) {
-                    // Find out which drink index was tapped
+                const clickedFace = e.target.closest('.card-face');
+                
+                if (clickedCard && clickedFace) {
                     const index = Array.from(cards).indexOf(clickedCard);
-                    
-                    // Increment rotation target by exactly 360 degrees
-                    flipRotations[index] += 360; 
-                    
                     const flipper = clickedCard.querySelector('.card-flipper');
+
+                    // If you clicked the front card face, spin a full 360 back to front
+                    if (clickedFace.classList.contains('card-front')) {
+                        flipRotations[index] += 360; 
+                    } 
+                    // If you clicked the back card face, spin a full 360 back to the back text
+                    else if (clickedFace.classList.contains('card-back')) {
+                        flipRotations[index] += 360;
+                    }
+
                     flipper.style.transform = `rotateY(${flipRotations[index]}deg)`;
                 }
             }
         });
 
-        // Initialize and kickstart loop frames
         updateCarouselStructure();
         requestAnimationFrame(physicsTick);
     </script>
