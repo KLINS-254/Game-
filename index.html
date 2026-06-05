@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>3D Premium Beverage Carousel</title>
+    <title>3D Fixed Beverage Carousel</title>
     <style>
         * {
             box-sizing: border-box;
@@ -23,7 +23,7 @@
             align-items: center;
             justify-content: center;
             overflow: hidden;
-            touch-action: none; /* Stops mobile scrolling from interfering with drag */
+            touch-action: none;
         }
 
         h1 {
@@ -34,7 +34,6 @@
             text-align: center;
         }
 
-        /* The 3D viewport canvas */
         .scene {
             width: 300px;
             height: 380px;
@@ -44,7 +43,6 @@
             justify-content: center;
         }
 
-        /* Carousel rotator ring */
         .carousel {
             width: 100%;
             height: 100%;
@@ -53,14 +51,14 @@
             transition: transform 0.6s cubic-bezier(0.2, 1, 0.3, 1);
         }
 
-        /* Card container anchoring the 3D space for individual cards */
+        /* Anchor point for each slot in the ring */
         .card-container {
             position: absolute;
             width: 260px;
             height: 360px;
             left: 20px;
             top: 10px;
-            transform-style: preserve-3d; /* CRITICAL: Allows true 3D layers inside */
+            transform-style: preserve-3d;
             transition: transform 0.6s cubic-bezier(0.2, 1, 0.3, 1), filter 0.5s, opacity 0.5s;
             cursor: grab;
         }
@@ -69,16 +67,27 @@
             cursor: grabbing;
         }
 
+        /* NEW LAYER: Manages the pure flip rotation in place */
+        .card-flipper {
+            width: 100%;
+            height: 100%;
+            position: relative;
+            transform-style: preserve-3d;
+            transition: transform 0.6s cubic-bezier(0.2, 1, 0.3, 1);
+        }
+
+        /* Triggered via JS: Flips cleanly on its own local center */
+        .card-container.flipped .card-flipper {
+            transform: rotateY(180deg);
+        }
+
         /* Card Faces Setup */
         .card-face {
             position: absolute;
             width: 100%;
             height: 100%;
-            
-            /* CRITICAL FIX: This hides the element completely when its back faces the camera */
             backface-visibility: hidden; 
             -webkit-backface-visibility: hidden;
-            
             border-radius: 24px;
             display: flex;
             flex-direction: column;
@@ -88,18 +97,16 @@
             box-shadow: 0 25px 50px rgba(0,0,0,0.8);
         }
 
-        /* Front Face (B Bottles) */
+        /* Front Face */
         .card-front {
             background: linear-gradient(135deg, #1e1e1e, #111111);
             border: 2px solid rgba(255,255,255,0.1);
-            z-index: 2; /* Keeps front on top naturally */
         }
 
         .card-front h2 {
             font-size: 2.2rem;
             font-weight: 800;
             text-transform: uppercase;
-            letter-spacing: 1px;
         }
 
         .bottle-placeholder {
@@ -115,12 +122,10 @@
             color: #777;
         }
 
-        /* Back Face (Advert Texts) */
+        /* Back Face */
         .card-back {
-            /* CRITICAL FIX: Pre-rotated 180 degrees so it's perfectly hidden behind the front */
-            transform: rotateY(180deg); 
+            transform: rotateY(180deg); /* Pre-flipped facing away */
             justify-content: center;
-            z-index: 1;
         }
 
         .card-back p {
@@ -164,58 +169,68 @@
     <div class="scene">
         <div class="carousel">
             
-            <div class="card-container coca-cola" data-index="0">
-                <div class="card-face card-front">
-                    <h2>Coca-Cola</h2>
-                    <div class="bottle-placeholder">[ Bottle Image ]</div>
-                    <div></div>
-                </div>
-                <div class="card-face card-back">
-                    <p>"Real Magic.<br>Taste the Feeling!"</p>
-                </div>
-            </div>
-
-            <div class="card-container sprite" data-index="1">
-                <div class="card-face card-front">
-                    <h2>Sprite</h2>
-                    <div class="bottle-placeholder">[ Bottle Image ]</div>
-                    <div></div>
-                </div>
-                <div class="card-face card-back">
-                    <p>"Heat Happens.<br>Stay Cool."</p>
+            <div class="card-container coca-cola">
+                <div class="card-flipper">
+                    <div class="card-face card-front">
+                        <h2>Coca-Cola</h2>
+                        <div class="bottle-placeholder">[ Bottle Image ]</div>
+                        <div></div>
+                    </div>
+                    <div class="card-face card-back">
+                        <p>"Real Magic.<br>Taste the Feeling!"</p>
+                    </div>
                 </div>
             </div>
 
-            <div class="card-container fanta" data-index="2">
-                <div class="card-face card-front">
-                    <h2>Fanta</h2>
-                    <div class="bottle-placeholder">[ Bottle Image ]</div>
-                    <div></div>
-                </div>
-                <div class="card-face card-back">
-                    <p>"Wanta Fanta?<br>Be More Flavors!"</p>
-                </div>
-            </div>
-
-            <div class="card-container stoney" data-index="3">
-                <div class="card-face card-front">
-                    <h2>Stoney</h2>
-                    <div class="bottle-placeholder">[ Bottle Image ]</div>
-                    <div></div>
-                </div>
-                <div class="card-face card-back">
-                    <p>"Kwenda Na Nyuki!<br>Feel the Ginger Kick."</p>
+            <div class="card-container sprite">
+                <div class="card-flipper">
+                    <div class="card-face card-front">
+                        <h2>Sprite</h2>
+                        <div class="bottle-placeholder">[ Bottle Image ]</div>
+                        <div></div>
+                    </div>
+                    <div class="card-face card-back">
+                        <p>"Heat Happens.<br>Stay Cool."</p>
+                    </div>
                 </div>
             </div>
 
-            <div class="card-container krest" data-index="4">
-                <div class="card-face card-front">
-                    <h2>Krest</h2>
-                    <div class="bottle-placeholder">[ Bottle Image ]</div>
-                    <div></div>
+            <div class="card-container fanta">
+                <div class="card-flipper">
+                    <div class="card-face card-front">
+                        <h2>Fanta</h2>
+                        <div class="bottle-placeholder">[ Bottle Image ]</div>
+                        <div></div>
+                    </div>
+                    <div class="card-face card-back">
+                        <p>"Wanta Fanta?<br>Be More Flavors!"</p>
+                    </div>
                 </div>
-                <div class="card-face card-back">
-                    <p>"The Sharp,<br>Bitter Lemon Mixer."</p>
+            </div>
+
+            <div class="card-container stoney">
+                <div class="card-flipper">
+                    <div class="card-face card-front">
+                        <h2>Stoney</h2>
+                        <div class="bottle-placeholder">[ Bottle Image ]</div>
+                        <div></div>
+                    </div>
+                    <div class="card-face card-back">
+                        <p>"Kwenda Na Nyuki!<br>Feel the Ginger Kick."</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card-container krest">
+                <div class="card-flipper">
+                    <div class="card-face card-front">
+                        <h2>Krest</h2>
+                        <div class="bottle-placeholder">[ Bottle Image ]</div>
+                        <div></div>
+                    </div>
+                    <div class="card-face card-back">
+                        <p>"The Sharp,<br>Bitter Lemon Mixer."</p>
+                    </div>
                 </div>
             </div>
 
@@ -224,7 +239,7 @@
 
     <div class="instructions">
         <p>← Swipe or drag horizontally to spin →</p>
-        <p>Tap the prominent center card to flip it!</p>
+        <p>Tap the prominent center card to flip it cleanly!</p>
     </div>
 
     <script>
@@ -233,51 +248,45 @@
         const totalCards = cards.length;
         
         const angle = 360 / totalCards;
-        // Radius depth calculation to position the ring structure perfectly
-        const tz = Math.round((260 / 2) / Math.tan(Math.PI / totalCards)) + 50; 
+        const tz = Math.round((260 / 2) / Math.tan(Math.PI / totalCards)) + 60; 
 
         let isDragging = false;
         let startX = 0;
         let currentX = 0;
         let baseCarouselAngle = 0;
 
-        // 1. Structural Engine (Calculates layout positions, scale adjustments, and backface setups)
+        // Structural Engine: Manages circle placement and active scale sizing
         function updateCarouselStructure() {
-            // Apply current angle matrix rotation to main layout engine
             carousel.style.transform = `translateZ(-${tz}px) rotateY(${baseCarouselAngle}deg)`;
 
             cards.forEach((card, i) => {
                 const cardAngle = angle * i;
                 
-                // Track relative positioning angle up to 180 / -180 degrees
                 let relativeAngle = (cardAngle + (baseCarouselAngle % 360)) % 360;
                 if (relativeAngle > 180) relativeAngle -= 360;
                 if (relativeAngle < -180) relativeAngle += 360;
 
-                // Scale Factor: Front card stands out at 1.3x scale; background items recede to 0.7x scale
+                // Scale Curves: Front card turns massive (1.3x), background items recede safely (0.7x)
                 const distanceFactor = Math.abs(relativeAngle) / 180; 
                 const scale = 1.3 - (distanceFactor * 0.6);
                 const opacity = 1.0 - (distanceFactor * 0.75);
                 
-                // Only the center card (within bounds) can be clicked or flipped
                 const isFrontCard = Math.abs(relativeAngle) < (angle / 2);
-                const isFlipped = card.classList.contains('flipped');
-                const flipRotation = isFlipped ? 180 : 0;
 
-                // Combine layout circle calculations alongside the flip mechanics seamlessly
-                card.style.transform = `rotateY(${cardAngle + flipRotation}deg) translateZ(${tz}px) scale(${scale})`;
+                // Set container positioning without altering the flip matrix variables
+                card.style.transform = `rotateY(${cardAngle}deg) translateZ(${tz}px) scale(${scale})`;
                 card.style.opacity = opacity;
                 card.style.pointerEvents = isFrontCard ? 'auto' : 'none';
             });
         }
 
-        // 2. Global Pointer Interface Engine (Handles Dragging smoothly)
+        // Pointer Interface
         window.addEventListener('pointerdown', (e) => {
             if (e.target.closest('.scene') || e.target.closest('.instructions')) {
                 isDragging = true;
                 startX = e.clientX;
                 currentX = startX;
-                carousel.style.transition = 'none'; // Instant response while dragging
+                carousel.style.transition = 'none';
             }
         });
 
@@ -287,7 +296,7 @@
             const deltaX = x - currentX;
             currentX = x;
 
-            baseCarouselAngle += deltaX * 0.35; // Sensitivity adjustments
+            baseCarouselAngle += deltaX * 0.35; 
             updateCarouselStructure();
         });
 
@@ -295,14 +304,12 @@
             if (!isDragging) return;
             isDragging = false;
 
-            // Smooth spring-back transition on release
             carousel.style.transition = 'transform 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.1)';
 
-            // Clean locking slot calculations
             const snapSlot = Math.round(-baseCarouselAngle / angle);
             baseCarouselAngle = -snapSlot * angle;
 
-            // Reset flipped states on cards that spin to the back
+            // Reset flipped state on background cards
             const activeIndex = ((snapSlot % totalCards) + totalCards) % totalCards;
             cards.forEach((card, idx) => {
                 if (idx !== activeIndex) card.classList.remove('flipped');
@@ -310,18 +317,16 @@
 
             updateCarouselStructure();
 
-            // Detect clean click vs active drag
+            // Handle Tap/Click separation
             const travelDistance = Math.abs(currentX - startX);
             if (travelDistance < 4) {
                 const clickedCard = e.target.closest('.card-container');
                 if (clickedCard) {
                     clickedCard.classList.toggle('flipped');
-                    updateCarouselStructure();
                 }
             }
         });
 
-        // Initialize default layout system matrix mapping on launch
         updateCarouselStructure();
     </script>
 </body>
