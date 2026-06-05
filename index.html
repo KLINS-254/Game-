@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>3D Kinetic Beverage Carousel</title>
+    <title>3D Kinetic Flip Beverage Carousel</title>
     <style>
         * {
             box-sizing: border-box;
@@ -230,7 +230,7 @@
 
     <div class="instructions">
         <p>← Flick or swipe with speed to slide →</p>
-        <p>Tap the center card to perform a full 360° spin back to itself!</p>
+        <p>Tap the center card to flip it over and read the advertisement!</p>
     </div>
 
     <script>
@@ -251,7 +251,7 @@
         let lastEventTime = 0;
         let lastEventX = 0;
 
-        // Tracks unique rotation values per card individually
+        // Tracks unique incremental rotation angles per card (0, 180, 360, 540...)
         const flipRotations = Array(totalCards).fill(0);
 
         function updateCarouselStructure() {
@@ -264,6 +264,7 @@
                 if (relativeAngle > 180) relativeAngle -= 360;
                 if (relativeAngle < -180) relativeAngle += 360;
 
+                // Scale Curves: Front card is highly prominent (1.35x), background items recede (0.7x)
                 const distanceFactor = Math.abs(relativeAngle) / 180; 
                 const scale = 1.35 - (distanceFactor * 0.65);
                 const opacity = 1.0 - (distanceFactor * 0.75);
@@ -334,25 +335,16 @@
 
             velocity = Math.max(-15, Math.min(15, velocity));
 
-            // Click/Tap Verification
+            // Clean click check (separates tap vs slide)
             const travelDistance = Math.abs(currentX - startX);
             if (travelDistance < 5) {
                 const clickedCard = e.target.closest('.card-container');
-                const clickedFace = e.target.closest('.card-face');
-                
-                if (clickedCard && clickedFace) {
+                if (clickedCard) {
                     const index = Array.from(cards).indexOf(clickedCard);
                     const flipper = clickedCard.querySelector('.card-flipper');
 
-                    // If you clicked the front card face, spin a full 360 back to front
-                    if (clickedFace.classList.contains('card-front')) {
-                        flipRotations[index] += 360; 
-                    } 
-                    // If you clicked the back card face, spin a full 360 back to the back text
-                    else if (clickedFace.classList.contains('card-back')) {
-                        flipRotations[index] += 360;
-                    }
-
+                    // Increment rotation target by exactly 180 degrees every click
+                    flipRotations[index] += 180; 
                     flipper.style.transform = `rotateY(${flipRotations[index]}deg)`;
                 }
             }
