@@ -9,19 +9,21 @@
             box-sizing: border-box;
             margin: 0;
             padding: 0;
-            user-select: none; /* Prevents text highlighting while dragging */
+            user-select: none;
+            -webkit-user-drag: none;
         }
 
         body {
             background-color: #0b0b0b;
             color: #fff;
-            font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+            font-family: system-ui, -apple-system, sans-serif;
             min-height: 100vh;
             display: flex;
             flex-direction: column;
             align-items: center;
             justify-content: center;
             overflow: hidden;
+            touch-action: none; /* Prevents mobile browser pull-to-refresh & default scrolling */
         }
 
         h1 {
@@ -29,20 +31,18 @@
             text-transform: uppercase;
             letter-spacing: 3px;
             font-size: 2rem;
-            text-shadow: 0 0 15px rgba(255,255,255,0.2);
+            text-align: center;
         }
 
-        /* 3D Stage */
         .scene {
             width: 300px;
             height: 380px;
-            perspective: 1200px; /* Depth of the 3D room */
+            perspective: 1200px;
             display: flex;
             align-items: center;
             justify-content: center;
         }
 
-        /* Carousel Ring */
         .carousel {
             width: 100%;
             height: 100%;
@@ -51,7 +51,6 @@
             transition: transform 0.5s cubic-bezier(0.25, 1, 0.5, 1);
         }
 
-        /* Card Container Wrapper */
         .card-container {
             position: absolute;
             width: 260px;
@@ -59,7 +58,7 @@
             left: 20px;
             top: 10px;
             transform-style: preserve-3d;
-            transition: transform 0.5s ease, filter 0.5s ease;
+            transition: transform 0.5s ease, filter 0.5s ease, opacity 0.5s ease;
             cursor: grab;
         }
 
@@ -67,12 +66,6 @@
             cursor: grabbing;
         }
 
-        /* Flip Action Modifier */
-        .card-container.flipped {
-            transform: rotateY(180deg) !important; 
-        }
-
-        /* Card Faces base setup */
         .card-face {
             position: absolute;
             width: 100%;
@@ -88,7 +81,7 @@
             border: 1px solid rgba(255,255,255,0.15);
         }
 
-        /* Front Styling */
+        /* Front Face Layout */
         .card-front {
             background: linear-gradient(135deg, #1f1f1f, #111111);
         }
@@ -97,7 +90,6 @@
             font-size: 2.2rem;
             font-weight: 800;
             text-transform: uppercase;
-            letter-spacing: 1px;
         }
 
         .bottle-placeholder {
@@ -113,7 +105,7 @@
             color: #888;
         }
 
-        /* Back Styling */
+        /* Back Face Layout */
         .card-back {
             background: #151515;
             transform: rotateY(180deg);
@@ -126,20 +118,210 @@
             font-weight: 600;
             text-align: center;
             font-style: italic;
-            padding: 10px;
         }
 
-        /* Brand Colors & Glows */
-        .coca-cola .card-front h2 { color: #e60000; text-shadow: 0 0 15px rgba(230,0,0,0.3); }
+        /* Themes */
+        .coca-cola .card-front h2 { color: #e60000; }
         .coca-cola .card-back { border-color: #e60000; background: radial-gradient(circle, #cc0000 0%, #3a0000 100%); }
         
-        .sprite .card-front h2 { color: #00b359; text-shadow: 0 0 15px rgba(0,179,89,0.3); }
+        .sprite .card-front h2 { color: #00b359; }
         .sprite .card-back { border-color: #00b359; background: radial-gradient(circle, #00994d 0%, #00331a 100%); }
 
-        .fanta .card-front h2 { color: #ff8000; text-shadow: 0 0 15px rgba(255,128,0,0.3); }
+        .fanta .card-front h2 { color: #ff8000; }
         .fanta .card-back { border-color: #ff8000; background: radial-gradient(circle, #e67300 0%, #4d2600 100%); }
 
-        .stoney .card-front h2 { color: #96602d; text-shadow: 0 0 15px rgba(150,96,45,0.3); }
+        .stoney .card-front h2 { color: #96602d; }
         .stoney .card-back { border-color: #96602d; background: radial-gradient(circle, #7a4e24 0%, #2b1b0c 100%); }
 
-        .krest .card-front h2 { color: #eef211; text-shadow:
+        .krest .card-front h2 { color: #eef211; }
+        .krest .card-back { border-color: #eef211; background: radial-gradient(circle, #ccd30c 0%, #363802 100%); color: #000; }
+
+        .instructions {
+            margin-top: 40px;
+            text-align: center;
+            color: #666;
+            font-size: 0.9rem;
+            line-height: 1.6;
+            padding: 0 10px;
+        }
+    </style>
+</head>
+<body>
+
+    <h1>Beverage Collection</h1>
+
+    <div class="scene">
+        <div class="carousel">
+            
+            <div class="card-container coca-cola" data-index="0">
+                <div class="card-face card-front">
+                    <h2>Coca-Cola</h2>
+                    <div class="bottle-placeholder">[ Bottle Image ]</div>
+                    <div></div>
+                </div>
+                <div class="card-face card-back">
+                    <p>"Real Magic.<br>Taste the Feeling!"</p>
+                </div>
+            </div>
+
+            <div class="card-container sprite" data-index="1">
+                <div class="card-face card-front">
+                    <h2>Sprite</h2>
+                    <div class="bottle-placeholder">[ Bottle Image ]</div>
+                    <div></div>
+                </div>
+                <div class="card-face card-back">
+                    <p>"Heat Happens.<br>Stay Cool."</p>
+                </div>
+            </div>
+
+            <div class="card-container fanta" data-index="2">
+                <div class="card-face card-front">
+                    <h2>Fanta</h2>
+                    <div class="bottle-placeholder">[ Bottle Image ]</div>
+                    <div></div>
+                </div>
+                <div class="card-face card-back">
+                    <p>"Wanta Fanta?<br>Be More Flavors!"</p>
+                </div>
+            </div>
+
+            <div class="card-container stoney" data-index="3">
+                <div class="card-face card-front">
+                    <h2>Stoney</h2>
+                    <div class="bottle-placeholder">[ Bottle Image ]</div>
+                    <div></div>
+                </div>
+                <div class="card-face card-back">
+                    <p>"Kwenda Na Nyuki!<br>Feel the Ginger Kick."</p>
+                </div>
+            </div>
+
+            <div class="card-container krest" data-index="4">
+                <div class="card-face card-front">
+                    <h2>Krest</h2>
+                    <div class="bottle-placeholder">[ Bottle Image ]</div>
+                    <div></div>
+                </div>
+                <div class="card-face card-back">
+                    <p>"The Sharp,<br>Bitter Lemon Mixer."</p>
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+    <div class="instructions">
+        <p>← Drag or swipe horizontally to spin →</p>
+        <p>Tap the center card to flip it over!</p>
+    </div>
+
+    <script>
+        const carousel = document.querySelector('.carousel');
+        const cards = document.querySelectorAll('.card-container');
+        const totalCards = cards.length;
+        
+        const angle = 360 / totalCards;
+        const tz = Math.round((260 / 2) / Math.tan(Math.PI / totalCards)) + 40; // Ring radius distance
+
+        let isDragging = false;
+        let startX = 0;
+        let currentX = 0;
+        let baseCarouselAngle = 0;
+        let activeIndex = 0;
+
+        // 1. Position and scale calculations
+        function updateCarouselStructure() {
+            // Rotate entire carousel container
+            carousel.style.transform = `translateZ(-${tz}px) rotateY(${baseCarouselAngle}deg)`;
+
+            // Handle scales and visibilities on individual cards
+            cards.forEach((card, i) => {
+                const cardAngle = angle * i;
+                
+                // Calculate relative rotation to view front
+                let relativeAngle = (cardAngle + (baseCarouselAngle % 360)) % 360;
+                if (relativeAngle > 180) relativeAngle -= 360;
+                if (relativeAngle < -180) relativeAngle += 360;
+
+                // Scale formula: 1.25 if facing dead center, dropping to 0.75 if in background
+                const distanceFactor = Math.abs(relativeAngle) / 180; // 0 (front) to 1 (back)
+                const scale = 1.25 - (distanceFactor * 0.5);
+                const opacity = 1.0 - (distanceFactor * 0.7);
+                
+                const isFrontCard = Math.abs(relativeAngle) < (angle / 2);
+                const isFlipped = card.classList.contains('flipped');
+                const rotationModifier = isFlipped ? 180 : 0;
+
+                card.style.transform = `rotateY(${cardAngle + rotationModifier}deg) translateZ(${tz}px) scale(${scale})`;
+                card.style.opacity = opacity;
+                
+                // Block background clicks completely
+                card.style.pointerEvents = isFrontCard ? 'auto' : 'none';
+                
+                if (isFrontCard) {
+                    activeIndex = i;
+                }
+            });
+        }
+
+        // 2. Global Pointer Events (Works beautifully for mouse AND touch)
+        window.addEventListener('pointerdown', (e) => {
+            // Ensure we are interacting with the carousel area
+            if (e.target.closest('.scene') || e.target.closest('.instructions')) {
+                isDragging = true;
+                startX = e.clientX;
+                currentX = startX;
+                carousel.style.transition = 'none'; // Instant drag tracing
+            }
+        });
+
+        window.addEventListener('pointermove', (e) => {
+            if (!isDragging) return;
+            const x = e.clientX;
+            const deltaX = x - currentX;
+            currentX = x;
+
+            // Turn drag into degrees
+            baseCarouselAngle += deltaX * 0.3;
+            updateCarouselStructure();
+        });
+
+        window.addEventListener('pointerup', (e) => {
+            if (!isDragging) return;
+            isDragging = false;
+
+            carousel.style.transition = 'transform 0.5s cubic-bezier(0.2, 1, 0.3, 1)';
+
+            // Target the closest snap slot
+            const snapSlot = Math.round(-baseCarouselAngle / angle);
+            baseCarouselAngle = -snapSlot * angle;
+
+            // Clear flips on other cards hidden in background
+            const absoluteActiveIndex = ((snapSlot % totalCards) + totalCards) % totalCards;
+            cards.forEach((card, idx) => {
+                if (idx !== absoluteActiveIndex) card.classList.remove('flipped');
+            });
+
+            updateCarouselStructure();
+
+            // Simple click/tap check
+            const travelDistance = Math.abs(currentX - startX);
+            if (travelDistance < 5) {
+                const clickedCard = e.target.closest('.card-container');
+                if (clickedCard) {
+                    toggleFlip(clickedCard);
+                }
+            }
+        });
+
+        function toggleFlip(cardElement) {
+            cardElement.classList.toggle('flipped');
+            updateCarouselStructure();
+        }
+
+        // Initialize setup
+        updateCarouselStructure();
+    </script>
+</body>
+</html>
