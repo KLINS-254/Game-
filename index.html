@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>3D Fixed Beverage Carousel</title>
+    <title>3D Kinetic Beverage Carousel</title>
     <style>
         * {
             box-sizing: border-box;
@@ -48,10 +48,9 @@
             height: 100%;
             position: absolute;
             transform-style: preserve-3d;
-            transition: transform 0.6s cubic-bezier(0.2, 1, 0.3, 1);
+            /* Transition removed here because physics engine manages smooth motion frames */
         }
 
-        /* Anchor point for each slot in the ring */
         .card-container {
             position: absolute;
             width: 260px;
@@ -59,7 +58,7 @@
             left: 20px;
             top: 10px;
             transform-style: preserve-3d;
-            transition: transform 0.6s cubic-bezier(0.2, 1, 0.3, 1), filter 0.5s, opacity 0.5s;
+            transition: opacity 0.3s, filter 0.3s;
             cursor: grab;
         }
 
@@ -67,21 +66,14 @@
             cursor: grabbing;
         }
 
-        /* NEW LAYER: Manages the pure flip rotation in place */
         .card-flipper {
             width: 100%;
             height: 100%;
             position: relative;
             transform-style: preserve-3d;
-            transition: transform 0.6s cubic-bezier(0.2, 1, 0.3, 1);
+            transition: transform 0.8s cubic-bezier(0.2, 1, 0.3, 1); /* Controls the 360 spin feel */
         }
 
-        /* Triggered via JS: Flips cleanly on its own local center */
-        .card-container.flipped .card-flipper {
-            transform: rotateY(180deg);
-        }
-
-        /* Card Faces Setup */
         .card-face {
             position: absolute;
             width: 100%;
@@ -124,7 +116,7 @@
 
         /* Back Face */
         .card-back {
-            transform: rotateY(180deg); /* Pre-flipped facing away */
+            transform: rotateY(180deg); 
             justify-content: center;
         }
 
@@ -137,7 +129,7 @@
             padding: 0 15px;
         }
 
-        /* Brand Custom Themes */
+        /* Brand Colors */
         .coca-cola .card-front h2 { color: #e60000; }
         .coca-cola .card-back { background: radial-gradient(circle, #df0000 0%, #200000 100%); border: 2px solid #df0000; }
         
@@ -238,8 +230,8 @@
     </div>
 
     <div class="instructions">
-        <p>← Swipe or drag horizontally to spin →</p>
-        <p>Tap the prominent center card to flip it cleanly!</p>
+        <p>← Flick or swipe with speed to slide with momentum →</p>
+        <p>Tap the center card to perform a full 360° flip</p>
     </div>
 
     <script>
@@ -250,12 +242,21 @@
         const angle = 360 / totalCards;
         const tz = Math.round((260 / 2) / Math.tan(Math.PI / totalCards)) + 60; 
 
+        // Physics State Variables
         let isDragging = false;
         let startX = 0;
         let currentX = 0;
+        
         let baseCarouselAngle = 0;
+        let targetCarouselAngle = 0;
+        let velocity = 0;
+        let lastEventTime = 0;
+        let lastEventX = 0;
 
-        // Structural Engine: Manages circle placement and active scale sizing
+        // Tracks unique continuous rotations per card to ensure true 360 progress
+        const flipRotations = Array(totalCards).fill(0);
+
+        // Core Render Engine
         function updateCarouselStructure() {
             carousel.style.transform = `translateZ(-${tz}px) rotateY(${baseCarouselAngle}deg)`;
 
@@ -266,35 +267,70 @@
                 if (relativeAngle > 180) relativeAngle -= 360;
                 if (relativeAngle < -180) relativeAngle += 360;
 
-                // Scale Curves: Front card turns massive (1.3x), background items recede safely (0.7x)
+                // Scale Curves: Front card turns massive (1.35x), background items recede (0.7x)
                 const distanceFactor = Math.abs(relativeAngle) / 180; 
-                const scale = 1.3 - (distanceFactor * 0.6);
+                const scale = 1.35 - (distanceFactor * 0.65);
                 const opacity = 1.0 - (distanceFactor * 0.75);
                 
                 const isFrontCard = Math.abs(relativeAngle) < (angle / 2);
 
-                // Set container positioning without altering the flip matrix variables
                 card.style.transform = `rotateY(${cardAngle}deg) translateZ(${tz}px) scale(${scale})`;
                 card.style.opacity = opacity;
                 card.style.pointerEvents = isFrontCard ? 'auto' : 'none';
             });
         }
 
-        // Pointer Interface
+        // Inertia Physics Animation Loop
+        function physicsTick() {
+            if (!isDragging) {
+                // Apply friction decrescendo
+                baseCarouselAngle += velocity;
+                velocity *= 0.92; // Friction rate (lower = stops faster)
+
+                // When velocity drops significantly, snap accurately to the closest card
+                if (Math.abs(velocity) < 0.1) {
+                    velocity = 0;
+                    const snapSlot = Math.round(-baseCarouselAngle / angle);
+                    targetCarouselAngle = -snapSlot * angle;
+                    
+                    // Smooth lerp adjustment to the final snap destination
+                    baseCarouselAngle += (targetCarouselAngle - baseCarouselAngle) * 0.15;
+                }
+                
+                updateCarouselStructure();
+            }
+            requestAnimationFrame(physicsTick);
+        }
+
+        // Pointer System Interactions
         window.addEventListener('pointerdown', (e) => {
             if (e.target.closest('.scene') || e.target.closest('.instructions')) {
                 isDragging = true;
+                velocity = 0;
                 startX = e.clientX;
                 currentX = startX;
-                carousel.style.transition = 'none';
+                lastEventX = e.clientX;
+                lastEventTime = performance.now();
             }
         });
 
         window.addEventListener('pointermove', (e) => {
             if (!isDragging) return;
+            
+            const now = performance.now();
             const x = e.clientX;
             const deltaX = x - currentX;
             currentX = x;
+
+            // Calculate instantaneous input speed for flick physics
+            const timeDelta = now - lastEventTime;
+            if (timeDelta > 0) {
+                // Degrees moved per millisecond
+                velocity = ((x - lastEventX) * 0.35) / (timeDelta / 16.66); 
+            }
+
+            lastEventX = x;
+            lastEventTime = now;
 
             baseCarouselAngle += deltaX * 0.35; 
             updateCarouselStructure();
@@ -304,30 +340,34 @@
             if (!isDragging) return;
             isDragging = false;
 
-            carousel.style.transition = 'transform 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.1)';
+            // If the user drags and holds still before releasing, kill the velocity
+            if (performance.now() - lastEventTime > 100) {
+                velocity = 0;
+            }
 
-            const snapSlot = Math.round(-baseCarouselAngle / angle);
-            baseCarouselAngle = -snapSlot * angle;
+            // Cap maximum physics flick velocity to prevent endless chaotic spinning
+            velocity = Math.max(-15, Math.min(15, velocity));
 
-            // Reset flipped state on background cards
-            const activeIndex = ((snapSlot % totalCards) + totalCards) % totalCards;
-            cards.forEach((card, idx) => {
-                if (idx !== activeIndex) card.classList.remove('flipped');
-            });
-
-            updateCarouselStructure();
-
-            // Handle Tap/Click separation
+            // Tap Detection
             const travelDistance = Math.abs(currentX - startX);
-            if (travelDistance < 4) {
+            if (travelDistance < 5) {
                 const clickedCard = e.target.closest('.card-container');
                 if (clickedCard) {
-                    clickedCard.classList.toggle('flipped');
+                    // Find out which drink index was tapped
+                    const index = Array.from(cards).indexOf(clickedCard);
+                    
+                    // Increment rotation target by exactly 360 degrees
+                    flipRotations[index] += 360; 
+                    
+                    const flipper = clickedCard.querySelector('.card-flipper');
+                    flipper.style.transform = `rotateY(${flipRotations[index]}deg)`;
                 }
             }
         });
 
+        // Initialize and kickstart loop frames
         updateCarouselStructure();
+        requestAnimationFrame(physicsTick);
     </script>
 </body>
 </html>
