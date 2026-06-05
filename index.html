@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Joy & Ticoh - Step by Step Story Sequence</title>
+    <title>Joy & Ticoh - Heart First Sequence</title>
     <style>
         * {
             margin: 0;
@@ -32,7 +32,7 @@
         const canvas = document.getElementById('particleCanvas');
         const ctx = canvas.getContext('2d');
 
-        const PARTICLE_COUNT = 9000;
+        const PARTICLE_COUNT = 9500;
         const COLORS = [
             'rgba(255, 40, 100, 0.95)',   // Hot Pink
             'rgba(40, 255, 140, 0.95)',   // Neon Green
@@ -44,12 +44,11 @@
         let width = canvas.width = window.innerWidth;
         let height = canvas.height = window.innerHeight;
         
-        // Exact Step-by-Step State Controller:
-        // 0 = Initial Delay (Stars Drift)
-        // 1 = Show ONLY Joy (Left side)
-        // 2 = Laser draws the Heart outline
-        // 3 = Show Ticoh (Right side) while Heart pulses
-        // 4 = Explosion across the entire screen
+        // --- Corrected Choreography States ---
+        // 0 = Scattered Stars Drift (1.5s)
+        // 1 = Laser Draws the Heart Shape out of the stars
+        // 2 = Heart completed -> Names "Joy" and "Ticoh" form INSIDE
+        // 3 = Full Screen Explosion
         let currentState = 0; 
         let stateTimer = 0;
         let particles = [];
@@ -83,18 +82,19 @@
             offCanvas.width = width;
             offCanvas.height = height;
 
-            const fontSize = Math.min(width / 12, 55);
+            // Make text sizes neat and fits nicely inside the heart halves
+            const fontSize = Math.min(width / 14, 45);
             offCtx.font = `bold ${fontSize}px sans-serif`;
             offCtx.fillStyle = '#ffffff';
             offCtx.textBaseline = 'middle';
 
-            // Left Side text layout
+            // Joy position (Left inner chamber)
             offCtx.textAlign = 'right';
-            offCtx.fillText("Joy", width / 2 - (heartScale * 4.5), height / 2);
+            offCtx.fillText("Joy", width / 2 - (heartScale * 2.5), height / 2);
 
-            // Right Side text layout
+            // Ticoh position (Right inner chamber)
             offCtx.textAlign = 'left';
-            offCtx.fillText("Ticoh", width / 2 + (heartScale * 4.5), height / 2);
+            offCtx.fillText("Ticoh", width / 2 + (heartScale * 2.5), height / 2);
 
             try {
                 const imgData = offCtx.getImageData(0, 0, width, height).data;
@@ -116,6 +116,7 @@
                 console.error(e);
             }
 
+            // Map out the outer structural heart line loop arrays
             for (let i = 0; i < PARTICLE_COUNT; i++) {
                 const t = Math.PI * 2 * (i / PARTICLE_COUNT);
                 const pt = getHeartPoint(t, heartScale);
@@ -133,8 +134,8 @@
             constructor() {
                 this.x = Math.random() * width;
                 this.y = Math.random() * height;
-                this.vx = (Math.random() - 0.5) * 2;
-                this.vy = (Math.random() - 0.5) * 2;
+                this.vx = (Math.random() - 0.5) * 3;
+                this.vy = (Math.random() - 0.5) * 3;
                 this.radius = Math.random() * 1.5 + 0.6;
                 this.color = COLORS[Math.floor(Math.random() * COLORS.length)];
                 this.ease = 0.08;
@@ -142,53 +143,32 @@
 
             update(index) {
                 if (currentState === 0) {
-                    // State 0: 1.5s Initial Starfield Drift
+                    // Phase 0: 1.5s Scattered stars drifting peacefully
                     this.vx *= 0.99;
                     this.vy *= 0.99;
                     if (this.x < 0 || this.x > width) this.vx *= -1;
                     if (this.y < 0 || this.y > height) this.vy *= -1;
                 }
                 else if (currentState === 1) {
-                    // State 1: ONLY "Joy" Forms. Other particles drift loosely
-                    if (index < targets.joy.length) {
-                        const target = targets.joy[index];
-                        this.vx += (target.x - this.x) * this.ease;
-                        this.vy += (target.y - this.y) * this.ease;
-                        this.vx *= 0.82; 
-                        this.vy *= 0.82;
-                    } else {
-                        this.vx *= 0.98;
-                        this.vy *= 0.98;
-                        if (this.x < 0 || this.x > width) this.vx *= -1;
-                        if (this.y < 0 || this.y > height) this.vy *= -1;
-                    }
+                    // Phase 1: Stars pull into the drawing outline of the heart
+                    const hIndex = index % targets.heartOutline.length;
+                    const target = targets.heartOutline[hIndex];
+                    
+                    this.vx += (target.x - this.x) * (this.ease * 0.8);
+                    this.vy += (target.y - this.y) * (this.ease * 0.8);
+                    this.vx *= 0.84;
+                    this.vy *= 0.84;
                 }
                 else if (currentState === 2) {
-                    // State 2: Laser draws the Heart. "Joy" particles stay locked, rest gather to outline
-                    if (index < targets.joy.length) {
-                        const target = targets.joy[index];
-                        this.vx += (target.x - this.x) * this.ease;
-                        this.vy += (target.y - this.y) * this.ease;
-                        this.vx *= 0.82; 
-                        this.vy *= 0.82;
-                    } else {
-                        // Gather particles to the heart outline sections as the laser draws it out
-                        const hIndex = index % targets.heartOutline.length;
-                        const target = targets.heartOutline[hIndex];
-                        this.vx += (target.x - this.x) * (this.ease * 0.6);
-                        this.vy += (target.y - this.y) * (this.ease * 0.6);
-                        this.vx *= 0.85;
-                        this.vy *= 0.85;
-                    }
-                }
-                else if (currentState === 3) {
-                    // State 3: "Ticoh" joins. Heart is fully complete and pulsing
+                    // Phase 2: Heart is full. Remaining internal particles pull together into names inside
                     let target;
+                    // Allocate share of particles into the internal text forms
                     if (index < targets.joy.length) {
                         target = targets.joy[index];
                     } else if (index < targets.joy.length + targets.ticoh.length) {
                         target = targets.ticoh[index - targets.joy.length];
                     } else {
+                        // The rest maintain the beating outer heart shape wrapper
                         target = targets.heartOutline[index % targets.heartOutline.length];
                     }
 
@@ -200,14 +180,14 @@
                         const dynamicX = centerX + (target.x - centerX) * beat;
                         const dynamicY = centerY + (target.y - centerY) * beat;
 
-                        this.vx += (dynamicX - this.x) * (this.ease * 0.75);
-                        this.vy += (dynamicY - this.y) * (this.ease * 0.75);
+                        this.vx += (dynamicX - this.x) * this.ease;
+                        this.vy += (dynamicY - this.y) * this.ease;
                     }
-                    this.vx *= 0.85;
-                    this.vy *= 0.85;
+                    this.vx *= 0.83;
+                    this.vy *= 0.83;
                 }
-                else if (currentState === 4) {
-                    // State 4: Mass screen breakdown explosion loop
+                else if (currentState === 3) {
+                    // Phase 3: Blast out over the entire window screen space
                     this.vx *= 0.99; 
                     this.vy *= 0.99;
                     if (this.x < 0 || this.x > width) this.vx *= -1;
@@ -227,7 +207,7 @@
 
             explode() {
                 const angle = Math.random() * Math.PI * 2;
-                const force = Math.random() * 24 + 8; 
+                const force = Math.random() * 25 + 8; 
                 this.vx = Math.cos(angle) * force;
                 this.vy = Math.sin(angle) * force;
             }
@@ -256,60 +236,55 @@
 
             stateTimer++;
 
-            // --- Story Sequence Controller (Timed for a 15-Second Loop) ---
+            // --- Story Loop Timing Calculations ---
             if (currentState === 0 && stateTimer > 90) {
-                // Step 1: 1.5 Seconds Delay Ends -> Show Joy
+                // Step 1: 1.5 Seconds scattered stars drift finishes -> Laser starts drawing heart
                 currentState = 1;
                 stateTimer = 0;
+                laserProgress = 0;
             } 
-            else if (currentState === 1 && stateTimer > 180) {
-                // Step 2: Show Joy for 3 Seconds -> Laser Starts Drawing Heart
+            else if (currentState === 1 && laserProgress >= Math.PI * 2) {
+                // Step 2: Once the laser fully finishes the perimeter line -> Names form inside
                 currentState = 2;
                 stateTimer = 0;
-                laserProgress = 0; 
-            } 
-            else if (currentState === 2 && laserProgress >= Math.PI * 2) {
-                // Step 3: Once Laser completes the loop path -> Bring out Ticoh
-                currentState = 3;
-                stateTimer = 0;
             }
-            else if (currentState === 3 && stateTimer > 300) {
-                // Step 4: Keep whole sequence up for 5 Seconds -> Trigger explosion
-                currentState = 4;
+            else if (currentState === 2 && stateTimer > 360) {
+                // Step 3: Keep heart and inner names active on screen for 6 seconds -> Explode
+                currentState = 3;
                 stateTimer = 0;
                 particles.forEach(p => p.explode());
             }
-            else if (currentState === 4 && stateTimer > 120) {
-                // Step 5: Explode for 2 Seconds -> Clear and loop back to start
+            else if (currentState === 3 && stateTimer > 120) {
+                // Step 4: 2 Seconds explosion sequence completes -> Go back to drifting stars
                 currentState = 0;
                 stateTimer = 0;
                 particles.forEach(p => p.resetDrift());
             }
 
-            // --- Render Particles ---
+            // --- Update and Render Particles ---
             for (let i = 0; i < particles.length; i++) {
                 particles[i].update(i);
                 particles[i].draw();
             }
 
-            // --- Active Laser Pen Overlay Engine ---
-            if (currentState === 2 || currentState === 3) {
-                if (currentState === 2) {
-                    laserProgress += 0.05; // Control drawing speed factor
+            // --- Active Neon Laser Writer Brush ---
+            if (currentState === 1 || currentState === 2) {
+                if (currentState === 1) {
+                    laserProgress += 0.045; // Smooth incremental stroke draw rate speed
                 } else {
-                    laserProgress = Math.PI * 2; // Fixed fully completed heart loop state
+                    laserProgress = Math.PI * 2; // Locked fully completed loop ring
                 }
 
                 ctx.save();
                 ctx.lineWidth = 4.5;
                 ctx.lineCap = 'round';
                 
+                // Neon glow blur specs
                 ctx.shadowBlur = 18;
-                ctx.shadowColor = '#ff2864'; // Vivid Magenta neon aura glow
+                ctx.shadowColor = '#ff2864'; 
 
                 ctx.beginPath();
                 for (let t = 0; t <= laserProgress; t += 0.02) {
-                    // Shift parametric index track configuration to match image start orientation
                     const pt = getHeartPoint(t - Math.PI, heartScale);
                     const lx = width / 2 + pt.x;
                     const ly = height / 2 + pt.y;
