@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>3D Interactive Beverage Carousel</title>
+    <title>3D Premium Beverage Carousel</title>
     <style>
         * {
             box-sizing: border-box;
@@ -23,17 +23,18 @@
             align-items: center;
             justify-content: center;
             overflow: hidden;
-            touch-action: none; /* Prevents mobile browser pull-to-refresh & default scrolling */
+            touch-action: none; /* Stops mobile scrolling from interfering with drag */
         }
 
         h1 {
-            margin-bottom: 50px;
+            margin-bottom: 60px;
             text-transform: uppercase;
             letter-spacing: 3px;
             font-size: 2rem;
             text-align: center;
         }
 
+        /* The 3D viewport canvas */
         .scene {
             width: 300px;
             height: 380px;
@@ -43,22 +44,24 @@
             justify-content: center;
         }
 
+        /* Carousel rotator ring */
         .carousel {
             width: 100%;
             height: 100%;
             position: absolute;
             transform-style: preserve-3d;
-            transition: transform 0.5s cubic-bezier(0.25, 1, 0.5, 1);
+            transition: transform 0.6s cubic-bezier(0.2, 1, 0.3, 1);
         }
 
+        /* Card container anchoring the 3D space for individual cards */
         .card-container {
             position: absolute;
             width: 260px;
             height: 360px;
             left: 20px;
             top: 10px;
-            transform-style: preserve-3d;
-            transition: transform 0.5s ease, filter 0.5s ease, opacity 0.5s ease;
+            transform-style: preserve-3d; /* CRITICAL: Allows true 3D layers inside */
+            transition: transform 0.6s cubic-bezier(0.2, 1, 0.3, 1), filter 0.5s, opacity 0.5s;
             cursor: grab;
         }
 
@@ -66,83 +69,91 @@
             cursor: grabbing;
         }
 
+        /* Card Faces Setup */
         .card-face {
             position: absolute;
             width: 100%;
             height: 100%;
+            
+            /* CRITICAL FIX: This hides the element completely when its back faces the camera */
             backface-visibility: hidden; 
-            border-radius: 20px;
+            -webkit-backface-visibility: hidden;
+            
+            border-radius: 24px;
             display: flex;
             flex-direction: column;
             align-items: center;
             justify-content: space-between;
-            padding: 30px 20px;
-            box-shadow: 0 20px 40px rgba(0,0,0,0.7);
-            border: 1px solid rgba(255,255,255,0.15);
+            padding: 35px 20px;
+            box-shadow: 0 25px 50px rgba(0,0,0,0.8);
         }
 
-        /* Front Face Layout */
+        /* Front Face (B Bottles) */
         .card-front {
-            background: linear-gradient(135deg, #1f1f1f, #111111);
+            background: linear-gradient(135deg, #1e1e1e, #111111);
+            border: 2px solid rgba(255,255,255,0.1);
+            z-index: 2; /* Keeps front on top naturally */
         }
 
         .card-front h2 {
             font-size: 2.2rem;
             font-weight: 800;
             text-transform: uppercase;
+            letter-spacing: 1px;
         }
 
         .bottle-placeholder {
-            width: 80px;
-            height: 180px;
-            background: rgba(255,255,255,0.05);
-            border-radius: 15px;
+            width: 85px;
+            height: 190px;
+            background: rgba(255,255,255,0.04);
+            border-radius: 18px;
             display: flex;
             align-items: center;
             justify-content: center;
-            border: 2px dashed rgba(255,255,255,0.2);
+            border: 2px dashed rgba(255,255,255,0.15);
             font-size: 0.8rem;
-            color: #888;
+            color: #777;
         }
 
-        /* Back Face Layout */
+        /* Back Face (Advert Texts) */
         .card-back {
-            background: #151515;
-            transform: rotateY(180deg);
+            /* CRITICAL FIX: Pre-rotated 180 degrees so it's perfectly hidden behind the front */
+            transform: rotateY(180deg); 
             justify-content: center;
+            z-index: 1;
         }
 
         .card-back p {
             font-size: 1.4rem;
-            line-height: 1.5;
+            line-height: 1.6;
             font-weight: 600;
             text-align: center;
             font-style: italic;
+            padding: 0 15px;
         }
 
-        /* Themes */
+        /* Brand Custom Themes */
         .coca-cola .card-front h2 { color: #e60000; }
-        .coca-cola .card-back { border-color: #e60000; background: radial-gradient(circle, #cc0000 0%, #3a0000 100%); }
+        .coca-cola .card-back { background: radial-gradient(circle, #df0000 0%, #200000 100%); border: 2px solid #df0000; }
         
         .sprite .card-front h2 { color: #00b359; }
-        .sprite .card-back { border-color: #00b359; background: radial-gradient(circle, #00994d 0%, #00331a 100%); }
+        .sprite .card-back { background: radial-gradient(circle, #00ab55 0%, #001a0d 100%); border: 2px solid #00ab55; }
 
         .fanta .card-front h2 { color: #ff8000; }
-        .fanta .card-back { border-color: #ff8000; background: radial-gradient(circle, #e67300 0%, #4d2600 100%); }
+        .fanta .card-back { background: radial-gradient(circle, #ff8000 0%, #2b1600 100%); border: 2px solid #ff8000; }
 
-        .stoney .card-front h2 { color: #96602d; }
-        .stoney .card-back { border-color: #96602d; background: radial-gradient(circle, #7a4e24 0%, #2b1b0c 100%); }
+        .stoney .card-front h2 { color: #a16a35; }
+        .stoney .card-back { background: radial-gradient(circle, #8a5524 0%, #1a0f05 100%); border: 2px solid #8a5524; }
 
-        .krest .card-front h2 { color: #eef211; }
-        .krest .card-back { border-color: #eef211; background: radial-gradient(circle, #ccd30c 0%, #363802 100%); color: #000; }
+        .krest .card-front h2 { color: #f2f612; }
+        .krest .card-back { background: radial-gradient(circle, #ccd30c 0%, #222401 100%); border: 2px solid #ccd30c; color: #000; }
 
         .instructions {
-            margin-top: 40px;
+            margin-top: 50px;
             text-align: center;
-            color: #666;
+            color: #555;
             font-size: 0.9rem;
             line-height: 1.6;
-            padding: 0 10px;
         }
     </style>
 </head>
@@ -212,8 +223,8 @@
     </div>
 
     <div class="instructions">
-        <p>← Drag or swipe horizontally to spin →</p>
-        <p>Tap the center card to flip it over!</p>
+        <p>← Swipe or drag horizontally to spin →</p>
+        <p>Tap the prominent center card to flip it!</p>
     </div>
 
     <script>
@@ -222,57 +233,51 @@
         const totalCards = cards.length;
         
         const angle = 360 / totalCards;
-        const tz = Math.round((260 / 2) / Math.tan(Math.PI / totalCards)) + 40; // Ring radius distance
+        // Radius depth calculation to position the ring structure perfectly
+        const tz = Math.round((260 / 2) / Math.tan(Math.PI / totalCards)) + 50; 
 
         let isDragging = false;
         let startX = 0;
         let currentX = 0;
         let baseCarouselAngle = 0;
-        let activeIndex = 0;
 
-        // 1. Position and scale calculations
+        // 1. Structural Engine (Calculates layout positions, scale adjustments, and backface setups)
         function updateCarouselStructure() {
-            // Rotate entire carousel container
+            // Apply current angle matrix rotation to main layout engine
             carousel.style.transform = `translateZ(-${tz}px) rotateY(${baseCarouselAngle}deg)`;
 
-            // Handle scales and visibilities on individual cards
             cards.forEach((card, i) => {
                 const cardAngle = angle * i;
                 
-                // Calculate relative rotation to view front
+                // Track relative positioning angle up to 180 / -180 degrees
                 let relativeAngle = (cardAngle + (baseCarouselAngle % 360)) % 360;
                 if (relativeAngle > 180) relativeAngle -= 360;
                 if (relativeAngle < -180) relativeAngle += 360;
 
-                // Scale formula: 1.25 if facing dead center, dropping to 0.75 if in background
-                const distanceFactor = Math.abs(relativeAngle) / 180; // 0 (front) to 1 (back)
-                const scale = 1.25 - (distanceFactor * 0.5);
-                const opacity = 1.0 - (distanceFactor * 0.7);
+                // Scale Factor: Front card stands out at 1.3x scale; background items recede to 0.7x scale
+                const distanceFactor = Math.abs(relativeAngle) / 180; 
+                const scale = 1.3 - (distanceFactor * 0.6);
+                const opacity = 1.0 - (distanceFactor * 0.75);
                 
+                // Only the center card (within bounds) can be clicked or flipped
                 const isFrontCard = Math.abs(relativeAngle) < (angle / 2);
                 const isFlipped = card.classList.contains('flipped');
-                const rotationModifier = isFlipped ? 180 : 0;
+                const flipRotation = isFlipped ? 180 : 0;
 
-                card.style.transform = `rotateY(${cardAngle + rotationModifier}deg) translateZ(${tz}px) scale(${scale})`;
+                // Combine layout circle calculations alongside the flip mechanics seamlessly
+                card.style.transform = `rotateY(${cardAngle + flipRotation}deg) translateZ(${tz}px) scale(${scale})`;
                 card.style.opacity = opacity;
-                
-                // Block background clicks completely
                 card.style.pointerEvents = isFrontCard ? 'auto' : 'none';
-                
-                if (isFrontCard) {
-                    activeIndex = i;
-                }
             });
         }
 
-        // 2. Global Pointer Events (Works beautifully for mouse AND touch)
+        // 2. Global Pointer Interface Engine (Handles Dragging smoothly)
         window.addEventListener('pointerdown', (e) => {
-            // Ensure we are interacting with the carousel area
             if (e.target.closest('.scene') || e.target.closest('.instructions')) {
                 isDragging = true;
                 startX = e.clientX;
                 currentX = startX;
-                carousel.style.transition = 'none'; // Instant drag tracing
+                carousel.style.transition = 'none'; // Instant response while dragging
             }
         });
 
@@ -282,8 +287,7 @@
             const deltaX = x - currentX;
             currentX = x;
 
-            // Turn drag into degrees
-            baseCarouselAngle += deltaX * 0.3;
+            baseCarouselAngle += deltaX * 0.35; // Sensitivity adjustments
             updateCarouselStructure();
         });
 
@@ -291,36 +295,33 @@
             if (!isDragging) return;
             isDragging = false;
 
-            carousel.style.transition = 'transform 0.5s cubic-bezier(0.2, 1, 0.3, 1)';
+            // Smooth spring-back transition on release
+            carousel.style.transition = 'transform 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.1)';
 
-            // Target the closest snap slot
+            // Clean locking slot calculations
             const snapSlot = Math.round(-baseCarouselAngle / angle);
             baseCarouselAngle = -snapSlot * angle;
 
-            // Clear flips on other cards hidden in background
-            const absoluteActiveIndex = ((snapSlot % totalCards) + totalCards) % totalCards;
+            // Reset flipped states on cards that spin to the back
+            const activeIndex = ((snapSlot % totalCards) + totalCards) % totalCards;
             cards.forEach((card, idx) => {
-                if (idx !== absoluteActiveIndex) card.classList.remove('flipped');
+                if (idx !== activeIndex) card.classList.remove('flipped');
             });
 
             updateCarouselStructure();
 
-            // Simple click/tap check
+            // Detect clean click vs active drag
             const travelDistance = Math.abs(currentX - startX);
-            if (travelDistance < 5) {
+            if (travelDistance < 4) {
                 const clickedCard = e.target.closest('.card-container');
                 if (clickedCard) {
-                    toggleFlip(clickedCard);
+                    clickedCard.classList.toggle('flipped');
+                    updateCarouselStructure();
                 }
             }
         });
 
-        function toggleFlip(cardElement) {
-            cardElement.classList.toggle('flipped');
-            updateCarouselStructure();
-        }
-
-        // Initialize setup
+        // Initialize default layout system matrix mapping on launch
         updateCarouselStructure();
     </script>
 </body>
