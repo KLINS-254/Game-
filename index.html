@@ -2,535 +2,293 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-    <title>Legend of the 10 Rings</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>3D Beverage Carousel</title>
     <style>
         * {
             box-sizing: border-box;
-            user-select: none;
-            -webkit-user-select: none;
-        }
-        body {
             margin: 0;
             padding: 0;
-            background: #111;
+        }
+
+        body {
+            background-color: #111;
+            color: #fff;
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            overflow: hidden;
+            min-height: 100vh;
             display: flex;
             flex-direction: column;
             align-items: center;
             justify-content: center;
-            height: 100vh;
-            color: #fff;
-        }
-        #game-wrapper {
-            position: relative;
-            width: 800px;
-            height: 400px;
-            background: #222;
-            border: 4px solid #d4af37;
-            box-shadow: 0 0 20px rgba(212, 175, 55, 0.5);
-        }
-        canvas {
-            background: linear-gradient(to bottom, #1a0f2e, #0a0514);
-            display: block;
-            width: 100%;
-            height: 100%;
-        }
-        /* UI HUD Overlay */
-        #hud {
-            position: absolute;
-            top: 10px;
-            left: 20px;
-            right: 20px;
-            display: flex;
-            justify-content: space-between;
-            font-size: 18px;
-            font-weight: bold;
-            pointer-events: none;
-            text-shadow: 2px 2px 4px #000;
-        }
-        .health-bar-container {
-            width: 200px;
-            height: 20px;
-            background: #444;
-            border: 2px solid #fff;
-            border-radius: 10px;
-            overflow: hidden;
-            margin-top: 5px;
-        }
-        #health-bar {
-            width: 100%;
-            height: 100%;
-            background: #ff4757;
-            transition: width 0.1s;
-        }
-        #combo-counter {
-            color: #d4af37;
-            font-size: 22px;
-            position: absolute;
-            top: 50px;
-            left: 20px;
+            overflow-hidden: hidden;
         }
 
-        /* Mobile / On-screen Controls Overlay */
-        #controls {
-            position: absolute;
-            bottom: 15px;
-            left: 0;
-            right: 0;
-            height: 120px;
-            padding: 0 30px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            pointer-events: none;
+        h1 {
+            margin-bottom: 40px;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            text-shadow: 0 0 10px rgba(255,255,255,0.3);
         }
-        
-        /* Left Side Joystick Zone */
-        #joystick-zone {
-            width: 100px;
-            height: 100px;
-            background: rgba(255, 255, 255, 0.1);
-            border: 3px dashed rgba(214, 175, 55, 0.5);
-            border-radius: 50%;
-            position: relative;
-            pointer-events: auto;
+
+        /* 3D Scene Wrapper */
+        .scene {
+            width: 300px;
+            height: 300px;
+            perspective: 1000px; /* Gives the 3D depth effect */
+            margin-bottom: 50px;
+        }
+
+        /* Carousel Container */
+        .carousel {
+            width: 100%;
+            height: 100%;
+            position: absolute;
+            transform-style: preserve-3d;
+            transition: transform 0.8s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+
+        /* Base Card Styling */
+        .card-container {
+            position: absolute;
+            width: 280px;
+            height: 280px;
+            left: 10px;
+            top: 10px;
+            transform-style: preserve-3d;
+            transition: transform 0.6s;
             cursor: pointer;
         }
-        #joystick-knob {
-            width: 40px;
-            height: 40px;
-            background: #d4af37;
-            border-radius: 50%;
-            position: absolute;
-            top: 30px;
-            left: 30px;
-            box-shadow: 0 0 10px #fff;
+
+        /* Flip effect when clicking/hovering the active card */
+        .card-container.flipped {
+            transform: rotateY(180deg) !important; /* Overrides the carousel placement rotation temporarily on flip */
         }
 
-        /* Right Side Combat Buttons */
-        #action-buttons {
+        .card-face {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            backface-visibility: hidden; /* Hides the back side when facing away */
+            border-radius: 15px;
             display: flex;
-            gap: 15px;
-            pointer-events: auto;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+            box-shadow: 0 15px 35px rgba(0,0,0,0.5);
+            border: 2px solid rgba(255,255,255,0.1);
         }
-        .btn {
+
+        /* Front Face */
+        .card-front {
+            background: linear-gradient(135deg, #222, #333);
+        }
+
+        .card-front h2 {
+            font-size: 2rem;
+            margin-bottom: 15px;
+            text-transform: uppercase;
+        }
+
+        .bottle-placeholder {
             width: 70px;
-            height: 70px;
-            border-radius: 50%;
-            border: 3px solid #fff;
-            color: white;
-            font-weight: bold;
-            font-size: 12px;
+            height: 160px;
+            background: rgba(255,255,255,0.1);
+            border-radius: 10px;
             display: flex;
             align-items: center;
             justify-content: center;
-            cursor: pointer;
-            box-shadow: 0 4px 6px rgba(0,0,0,0.3);
-            text-shadow: 1px 1px 2px #000;
+            border: 2px dashed rgba(255,255,255,0.3);
+            font-size: 0.8rem;
+            text-align: center;
         }
-        #btn-punch { background: #3498db; border-color: #2980b9; }
-        #btn-kick { background: #2ecc71; border-color: #27ae60; }
-        #btn-rings { background: #e67e22; border-color: #d35400; box-shadow: 0 0 15px #e67e22;}
-        .btn:active { transform: scale(0.9); }
+
+        /* Back Face */
+        .card-back {
+            background: #222;
+            transform: rotateY(180deg); /* Pre-rotates the back side */
+            text-align: center;
+            justify-content: center;
+        }
+
+        .card-back p {
+            font-size: 1.2rem;
+            line-height: 1.6;
+            font-style: italic;
+        }
+
+        /* Brand Specific Colors & Themes */
+        .coca-cola .card-front h2 { color: #df0000; }
+        .coca-cola .card-back { border-color: #df0000; background: radial-gradient(#df0000, #4a0000); }
+        
+        .sprite .card-front h2 { color: #00A859; }
+        .sprite .card-back { border-color: #00A859; background: radial-gradient(#00A859, #004a27); }
+
+        .fanta .card-front h2 { color: #f7931e; }
+        .fanta .card-back { border-color: #f7931e; background: radial-gradient(#f7931e, #7c4400); }
+
+        .stoney .card-front h2 { color: #7A4B1B; }
+        .stoney .card-back { border-color: #7A4B1B; background: radial-gradient(#7A4B1B, #301b07); }
+
+        .krest .card-front h2 { color: #e2e721; }
+        .krest .card-back { border-color: #e2e721; background: radial-gradient(#b3b70e, #3a3b02); color: #000; }
+
+        /* Navigation Buttons */
+        .nav-buttons {
+            display: flex;
+            gap: 20px;
+        }
+
+        button {
+            background: #fff;
+            color: #000;
+            border: none;
+            padding: 12px 24px;
+            font-size: 1rem;
+            font-weight: bold;
+            border-radius: 25px;
+            cursor: pointer;
+            transition: 0.3s ease;
+            box-shadow: 0 5px 15px rgba(255,255,255,0.1);
+        }
+
+        button:hover {
+            background: #df0000;
+            color: #fff;
+            transform: translateY(-2px);
+        }
+        
+        .hint {
+            margin-top: 15px;
+            font-size: 0.85rem;
+            color: #777;
+        }
     </style>
 </head>
 <body>
 
-    <div id="game-wrapper">
-        <canvas id="gameCanvas" width="800" height="400"></canvas>
-        
-        <div id="hud">
-            <div>
-                PLAYER (YOU)
-                <div class="health-bar-container"><div id="health-bar"></div></div>
-            </div>
-            <div id="score-display">Kills: 0</div>
-        </div>
-        <div id="combo-counter">Punch Combo: 0/4</div>
+    <h1>Beverage Zone</h1>
 
-        <div id="controls">
-            <div id="joystick-zone">
-                <div id="joystick-knob"></div>
+    <div class="scene">
+        <div class="carousel">
+            
+            <div class="card-container coca-cola" onclick="toggleFlip(this)">
+                <div class="card-face card-front">
+                    <h2>Coca-Cola</h2>
+                    <div class="bottle-placeholder">[ Bottle Image ]</div>
+                </div>
+                <div class="card-face card-back">
+                    <p>"Real Magic.<br>Taste the Feeling!"</p>
+                </div>
             </div>
 
-            <div id="action-buttons">
-                <div class="btn" id="btn-kick">KICK</div>
-                <div class="btn" id="btn-punch">PUNCH</div>
-                <div class="btn" id="btn-rings">10 RINGS</div>
+            <div class="card-container sprite" onclick="toggleFlip(this)">
+                <div class="card-face card-front">
+                    <h2>Sprite</h2>
+                    <div class="bottle-placeholder">[ Bottle Image ]</div>
+                </div>
+                <div class="card-face card-back">
+                    <p>"Heat Happens.<br>Stay Cool."</p>
+                </div>
             </div>
+
+            <div class="card-container fanta" onclick="toggleFlip(this)">
+                <div class="card-face card-front">
+                    <h2>Fanta</h2>
+                    <div class="bottle-placeholder">[ Bottle Image ]</div>
+                </div>
+                <div class="card-face card-back">
+                    <p>"Wanta Fanta?<br>Be More Than One Flavor!"</p>
+                </div>
+            </div>
+
+            <div class="card-container stoney" onclick="toggleFlip(this)">
+                <div class="card-face card-front">
+                    <h2>Stoney</h2>
+                    <div class="bottle-placeholder">[ Bottle Image ]</div>
+                </div>
+                <div class="card-face card-back">
+                    <p>"Kwenda Na Nyuki!<br>Feel the Ginger Kick."</p>
+                </div>
+            </div>
+
+            <div class="card-container krest" onclick="toggleFlip(this)">
+                <div class="card-face card-front">
+                    <h2>Krest</h2>
+                    <div class="bottle-placeholder">[ Bottle Image ]</div>
+                </div>
+                <div class="card-face card-back">
+                    <p>"The Sharp,<br>Bitter Lemon Mixer."</p>
+                </div>
+            </div>
+
         </div>
     </div>
 
+    <div class="nav-buttons">
+        <button onclick="rotateCarousel('prev')">← Prev</button>
+        <button onclick="rotateCarousel('next')">Next →</button>
+    </div>
+    
+    <p class="hint">Tip: Click on a card to flip it and read the advert text!</p>
+
     <script>
-        const canvas = document.getElementById('gameCanvas');
-        const ctx = canvas.getContext('2d');
+        const carousel = document.querySelector('.carousel');
+        const cards = document.querySelectorAll('.card-container');
+        const totalCards = cards.length;
+        let selectedIndex = 0;
 
-        // Game Elements/Variables
-        let player = {
-            x: 150,
-            y: 280,
-            width: 50,
-            height: 80,
-            speed: 4,
-            vx: 0,
-            vy: 0,
-            health: 100,
-            state: 'idle', // idle, punching, kicking, fiveRingStrike, releasingRings
-            stateTimer: 0,
-            facing: 1 // 1 = Right, -1 = Left
-        };
+        // Calculate the geometry angle for 5 items (360 degrees / 5 = 72 degrees)
+        const angle = 360 / totalCards;
+        
+        // Distance from center to push the cards outwards to form a ring
+        // Formula approx: (cardWidth / 2) / tan(angle / 2)
+        const tz = Math.round((280 / 2) / Math.tan(Math.PI / totalCards));
 
-        let punchCount = 0;
-        let score = 0;
-        let enemies = [];
-        let projectiles = [];
-        let particles = [];
-        let spawnTimer = 0;
-
-        // --- Controls Logic (Joystick & Buttons) ---
-        const joystickZone = document.getElementById('joystick-zone');
-        const joystickKnob = document.getElementById('joystick-knob');
-        let isDraggingJoystick = false;
-
-        function handleJoystick(clientX, clientY) {
-            const rect = joystickZone.getBoundingClientRect();
-            const centerX = rect.left + rect.width / 2;
-            const centerY = rect.top + rect.height / 2;
-            
-            let dx = clientX - centerX;
-            let dy = clientY - centerY;
-            const distance = Math.sqrt(dx * dx + dy * dy);
-            const maxRadius = rect.width / 2;
-
-            if (distance > maxRadius) {
-                dx = (dx / distance) * maxRadius;
-                dy = (dy / distance) * maxRadius;
-            }
-
-            joystickKnob.style.transform = `translate(${dx}px, ${dy}px)`;
-
-            // Convert to velocity vectors
-            player.vx = (dx / maxRadius) * player.speed;
-            player.vy = (dy / maxRadius) * player.speed;
-
-            if (player.vx > 0.5) player.facing = 1;
-            if (player.vx < -0.5) player.facing = -1;
+        // Position cards initially in a 3D circle ring
+        function setupCarousel() {
+            cards.forEach((card, i) => {
+                const cardAngle = angle * i;
+                // Cache the original base rotation for carousel rotation math later
+                card.dataset.baseRotation = cardAngle;
+                card.style.transform = `rotateY(${cardAngle}deg) translateZ(${tz}px)`;
+            });
         }
 
-        function resetJoystick() {
-            isDraggingJoystick = false;
-            joystickKnob.style.transform = `translate(0px, 0px)`;
-            player.vx = 0;
-            player.vy = 0;
-        }
+        function rotateCarousel(direction) {
+            // Unflip any flipped cards when moving to next item
+            cards.forEach(card => card.classList.remove('flipped'));
 
-        // Joystick Event Listeners (Supports Mouse & Touch)
-        joystickZone.addEventListener('mousedown', (e) => { isDraggingJoystick = true; handleJoystick(e.clientX, e.clientY); });
-        window.addEventListener('mousemove', (e) => { if (isDraggingJoystick) handleJoystick(e.clientX, e.clientY); });
-        window.addEventListener('mouseup', resetJoystick);
-
-        joystickZone.addEventListener('touchstart', (e) => { isDraggingJoystick = true; handleJoystick(e.touches[0].clientX, e.touches[0].clientY); });
-        window.addEventListener('touchmove', (e) => { if (isDraggingJoystick) handleJoystick(e.touches[0].clientX, e.touches[0].clientY); });
-        window.addEventListener('touchend', resetJoystick);
-
-        // Action Buttons Setup
-        document.getElementById('btn-punch').addEventListener('click', triggerPunch);
-        document.getElementById('btn-kick').addEventListener('click', triggerKick);
-        document.getElementById('btn-rings').addEventListener('click', triggerTenRings);
-
-        // --- Combat Triggers ---
-        function triggerPunch() {
-            if (player.state !== 'idle' && player.state !== 'punching') return;
-            
-            punchCount++;
-            document.getElementById('combo-counter').textContent = `Punch Combo: ${punchCount}/4`;
-
-            if (punchCount === 4) {
-                // Movie Accurate Style Action: Unleash 5 Rings and step forward with the other hand!
-                player.state = 'fiveRingStrike';
-                player.stateTimer = 25; // Duration of animation frames
-                punchCount = 0;
-                document.getElementById('combo-counter').textContent = `Punch Combo: 0/4`;
-                createShockwave(player.x + (player.facing * 60), player.y + 30, '#d4af37', 40);
-                checkMeleeHit(100, 40); // Large range attack
+            if (direction === 'next') {
+                selectedIndex++;
             } else {
-                player.state = 'punching';
-                player.stateTimer = 10;
-                checkMeleeHit(50, 20); // Normal range
+                selectedIndex--;
+            }
+            
+            // Rotate the parent carousel container backwards to bring the target card to front
+            const carouselAngle = -angle * selectedIndex;
+            carousel.style.transform = `translateZ(-${tz}px) rotateY(${carouselAngle}deg)`;
+        }
+
+        function toggleFlip(cardElement) {
+            // Get current active face index to ensure they only flip the one in the front view
+            const currentBaseAngle = parseFloat(cardElement.dataset.baseRotation);
+            
+            // Toggle flip class
+            if (cardElement.classList.contains('flipped')) {
+                cardElement.classList.remove('flipped');
+                cardElement.style.transform = `rotateY(${currentBaseAngle}deg) translateZ(${tz}px)`;
+            } else {
+                cardElement.classList.add('flipped');
+                // Adds 180 degrees to its active rotational position to show back side perfectly
+                cardElement.style.transform = `rotateY(${currentBaseAngle + 180}deg) translateZ(${tz}px)`;
             }
         }
 
-        function triggerKick() {
-            if (player.state !== 'idle') return;
-            player.state = 'kicking';
-            player.stateTimer = 12;
-            punchCount = 0; // Break combo
-            document.getElementById('combo-counter').textContent = `Punch Combo: 0/4`;
-            checkMeleeHit(45, 25);
-        }
-
-        function triggerTenRings() {
-            if (player.state !== 'idle') return;
-            player.state = 'releasingRings';
-            player.stateTimer = 30;
-            punchCount = 0;
-            document.getElementById('combo-counter').textContent = `Punch Combo: 0/4`;
-
-            // Release 10 glowing energy rings rapidly
-            for(let i = 0; i < 10; i++) {
-                setTimeout(() => {
-                    projectiles.push({
-                        x: player.x + (player.facing * 30),
-                        y: player.y + 20 + (Math.random() * 30 - 15),
-                        vx: player.facing * 10,
-                        radius: 8,
-                        color: 'rgba(212, 175, 55, 0.9)'
-                    });
-                    // Visual recoil sparks
-                    createSparks(player.x + (player.facing * 30), player.y + 30, '#fff');
-                }, i * 40); 
-            }
-        }
-
-        // --- Hit Detection & Math Formulas ---
-        function checkMeleeHit(range, damage) {
-            let hitBoxX = player.facing === 1 ? player.x + player.width : player.x - range;
-            enemies.forEach(enemy => {
-                // Simple AABB Box Collision bounding boxes
-                if (hitBoxX < enemy.x + enemy.width &&
-                    hitBoxX + range > enemy.x &&
-                    player.y < enemy.y + enemy.height &&
-                    player.y + player.height > enemy.y) {
-                    
-                    enemy.health -= damage;
-                    enemy.x += player.facing * 20; // Knockback
-                    createSparks(enemy.x + enemy.width/2, enemy.y + enemy.height/2, '#d4af37');
-                }
-            });
-        }
-
-        function createSparks(x, y, color) {
-            for(let i=0; i<8; i++) {
-                particles.push({
-                    x: x, y: y,
-                    vx: (Math.random() - 0.5) * 6,
-                    vy: (Math.random() - 0.5) * 6,
-                    alpha: 1, color: color,
-                    size: Math.random() * 3 + 1
-                });
-            }
-        }
-
-        function createShockwave(x, y, color, size) {
-            particles.push({
-                x: x, y: y, vx: 0, vy: 0, alpha: 1, color: color, size: size, type: 'wave'
-            });
-        }
-
-        // --- Game Engine Loops & Rendering ---
-        function spawnEnemy() {
-            spawnTimer++;
-            if (spawnTimer % 90 === 0) {
-                let side = Math.random() > 0.5 ? 1 : -1;
-                enemies.push({
-                    x: side === 1 ? 850 : -50,
-                    y: 280 + (Math.random() * 20 - 10),
-                    width: 45, height: 80,
-                    speed: 1.5 + Math.random() * 1.5,
-                    health: 30,
-                    color: '#3c1053'
-                });
-            }
-        }
-
-        function update() {
-            if (player.health <= 0) {
-                alert(`Game Over! You defended the realm and stopped ${score} warriors.`);
-                player.health = 100;
-                score = 0;
-                enemies = [];
-                document.getElementById('score-display').textContent = `Kills: ${score}`;
-                return;
-            }
-
-            // Move Player
-            player.x += player.vx;
-            player.y += player.vy;
-
-            // Restrict Boundaries
-            if (player.x < 0) player.x = 0;
-            if (player.x > canvas.width - player.width) player.x = canvas.width - player.width;
-            if (player.y < 220) player.y = 220; // Horizon line
-            if (player.y > canvas.height - player.height) player.y = canvas.height - player.height;
-
-            // Handle Action Timers
-            if (player.stateTimer > 0) {
-                player.stateTimer--;
-                if (player.stateTimer === 0) player.state = 'idle';
-            }
-
-            // Update Projectiles (10 rings)
-            projectiles.forEach((proj, pIndex) => {
-                proj.x += proj.vx;
-                // Collision with boundaries
-                if (proj.x < 0 || proj.x > canvas.width) projectiles.splice(pIndex, 1);
-
-                // Collision with enemies
-                enemies.forEach((enemy, eIndex) => {
-                    let dist = Math.sqrt(Math.pow((proj.x - (enemy.x + enemy.width/2)), 2) + Math.pow((proj.y - (enemy.y + enemy.height/2)), 2));
-                    if (dist < proj.radius + enemy.width/2) {
-                        enemy.health -= 15;
-                        createSparks(proj.x, proj.y, '#e67e22');
-                        projectiles.splice(pIndex, 1);
-                    }
-                });
-            });
-
-            // Update Enemies
-            enemies.forEach((enemy, index) => {
-                // Move towards player
-                let dx = player.x - enemy.x;
-                let dy = player.y - enemy.y;
-                let dist = Math.sqrt(dx*dx + dy*dy);
-                
-                if (dist > 30) {
-                    enemy.x += (dx / dist) * enemy.speed;
-                    enemy.y += (dy / dist) * enemy.speed;
-                } else {
-                    // Attack player
-                    player.health -= 0.3;
-                    document.getElementById('health-bar').style.width = player.health + '%';
-                }
-
-                if (enemy.health <= 0) {
-                    createShockwave(enemy.x + 20, enemy.y + 40, 'purple', 30);
-                    enemies.splice(index, 1);
-                    score++;
-                    document.getElementById('score-display').textContent = `Kills: ${score}`;
-                }
-            });
-
-            // Particles Update
-            particles.forEach((part, index) => {
-                part.x += part.vx;
-                part.y += part.vy;
-                if (part.type === 'wave') {
-                    part.size += 4;
-                    part.alpha -= 0.05;
-                } else {
-                    part.alpha -= 0.02;
-                }
-                if (part.alpha <= 0) particles.splice(index, 1);
-            });
-
-            spawnEnemy();
-        }
-
-        function draw() {
-            ctx.clearRect(0, 0, canvas.width, canvas.height);
-
-            // Draw Background Battlefield lines
-            ctx.strokeStyle = '#331a4d';
-            ctx.lineWidth = 2;
-            ctx.beginPath();
-            ctx.moveTo(0, 220); ctx.lineTo(canvas.width, 220);
-            ctx.stroke();
-
-            // Draw Particles
-            particles.forEach(part => {
-                ctx.save();
-                ctx.globalAlpha = part.alpha;
-                ctx.fillStyle = part.color;
-                ctx.strokeStyle = part.color;
-                if (part.type === 'wave') {
-                    ctx.lineWidth = 3;
-                    ctx.beginPath();
-                    ctx.arc(part.x, part.y, part.size, 0, Math.PI * 2);
-                    ctx.stroke();
-                } else {
-                    ctx.fillRect(part.x, part.y, part.size, part.size);
-                }
-                ctx.restore();
-            });
-
-            // Draw Enemies
-            enemies.forEach(enemy => {
-                ctx.fillStyle = enemy.color;
-                ctx.shadowBlur = 10;
-                ctx.shadowColor = 'purple';
-                ctx.fillRect(enemy.x, enemy.y, enemy.width, enemy.height);
-                // Glowing eyes for shadow warriors
-                ctx.fillStyle = '#ff0055';
-                ctx.fillRect(enemy.x + (enemy.x < player.x ? 30 : 10), enemy.y + 15, 6, 4);
-                ctx.fillRect(enemy.x + (enemy.x < player.x ? 38 : 18), enemy.y + 15, 6, 4);
-            });
-            ctx.shadowBlur = 0; // reset glow
-
-            // Draw Projectiles (Rings)
-            projectiles.forEach(proj => {
-                ctx.strokeStyle = proj.color;
-                ctx.lineWidth = 4;
-                ctx.shadowBlur = 8;
-                ctx.shadowColor = '#e67e22';
-                ctx.beginPath();
-                ctx.arc(proj.x, proj.y, proj.radius, 0, Math.PI * 2);
-                ctx.stroke();
-            });
-            ctx.shadowBlur = 0;
-
-            // Draw Player with Dynamic Attack Animations
-            ctx.save();
-            ctx.translate(player.x + player.width / 2, player.y + player.height / 2);
-            ctx.scale(player.facing, 1); // Flip asset depending on direction
-
-            // Base Body
-            ctx.fillStyle = '#1e3799';
-            ctx.fillRect(-player.width / 2, -player.height / 2, player.width, player.height);
-
-            // Red/Gold Gi sash
-            ctx.fillStyle = '#d4af37';
-            ctx.fillRect(-player.width / 2, 0, player.width, 10);
-
-            // Glowing Arm Rings rings visualization
-            ctx.strokeStyle = '#00ffff';
-            ctx.lineWidth = 3;
-            ctx.beginPath();
-            ctx.arc(-10, -10, 8, 0, Math.PI*2);
-            ctx.arc(10, -10, 8, 0, Math.PI*2);
-            ctx.stroke();
-
-            // Render Attack Stances
-            ctx.fillStyle = '#ffdd57'; // Fist color
-            if (player.state === 'punching') {
-                ctx.fillRect(15, -15, 20, 12); // Extended arm
-            } else if (player.state === 'fiveRingStrike') {
-                // The heavy golden 5-ring punch thrusting out the right hand!
-                ctx.fillStyle = '#d4af37';
-                ctx.shadowBlur = 15;
-                ctx.shadowColor = '#d4af37';
-                ctx.fillRect(15, -10, 45, 18); // Big extended right arm block
-            } else if (player.state === 'kicking') {
-                ctx.fillRect(15, 15, 25, 15); // Extended leg kicking outwards
-            } else if (player.state === 'releasingRings') {
-                ctx.fillStyle = '#e67e22';
-                ctx.fillRect(10, -20, 15, 12);
-                ctx.fillRect(10, -5, 15, 12);
-            }
-
-            ctx.restore();
-            ctx.shadowBlur = 0;
-        }
-
-        function gameLoop() {
-            update();
-            draw();
-            requestAnimationFrame(gameLoop);
-        }
-
-        // Start engine
-        gameLoop();
+        // Initialize position on load
+        setupCarousel();
+        // Shift carousel back slightly to align perspective origin gracefully
+        carousel.style.transform = `translateZ(-${tz}px) rotateY(0deg)`;
     </script>
 </body>
 </html>
