@@ -3,292 +3,143 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>3D Beverage Carousel</title>
+    <title>3D Interactive Beverage Carousel</title>
     <style>
         * {
             box-sizing: border-box;
             margin: 0;
             padding: 0;
+            user-select: none; /* Prevents text highlighting while dragging */
         }
 
         body {
-            background-color: #111;
+            background-color: #0b0b0b;
             color: #fff;
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
             min-height: 100vh;
             display: flex;
             flex-direction: column;
             align-items: center;
             justify-content: center;
-            overflow-hidden: hidden;
+            overflow: hidden;
         }
 
         h1 {
-            margin-bottom: 40px;
+            margin-bottom: 50px;
             text-transform: uppercase;
-            letter-spacing: 2px;
-            text-shadow: 0 0 10px rgba(255,255,255,0.3);
+            letter-spacing: 3px;
+            font-size: 2rem;
+            text-shadow: 0 0 15px rgba(255,255,255,0.2);
         }
 
-        /* 3D Scene Wrapper */
+        /* 3D Stage */
         .scene {
             width: 300px;
-            height: 300px;
-            perspective: 1000px; /* Gives the 3D depth effect */
-            margin-bottom: 50px;
+            height: 380px;
+            perspective: 1200px; /* Depth of the 3D room */
+            display: flex;
+            align-items: center;
+            justify-content: center;
         }
 
-        /* Carousel Container */
+        /* Carousel Ring */
         .carousel {
             width: 100%;
             height: 100%;
             position: absolute;
             transform-style: preserve-3d;
-            transition: transform 0.8s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            transition: transform 0.5s cubic-bezier(0.25, 1, 0.5, 1);
         }
 
-        /* Base Card Styling */
+        /* Card Container Wrapper */
         .card-container {
             position: absolute;
-            width: 280px;
-            height: 280px;
-            left: 10px;
+            width: 260px;
+            height: 360px;
+            left: 20px;
             top: 10px;
             transform-style: preserve-3d;
-            transition: transform 0.6s;
-            cursor: pointer;
+            transition: transform 0.5s ease, filter 0.5s ease;
+            cursor: grab;
         }
 
-        /* Flip effect when clicking/hovering the active card */
+        .card-container:active {
+            cursor: grabbing;
+        }
+
+        /* Flip Action Modifier */
         .card-container.flipped {
-            transform: rotateY(180deg) !important; /* Overrides the carousel placement rotation temporarily on flip */
+            transform: rotateY(180deg) !important; 
         }
 
+        /* Card Faces base setup */
         .card-face {
             position: absolute;
             width: 100%;
             height: 100%;
-            backface-visibility: hidden; /* Hides the back side when facing away */
-            border-radius: 15px;
+            backface-visibility: hidden; 
+            border-radius: 20px;
             display: flex;
             flex-direction: column;
             align-items: center;
-            justify-content: center;
-            padding: 20px;
-            box-shadow: 0 15px 35px rgba(0,0,0,0.5);
-            border: 2px solid rgba(255,255,255,0.1);
+            justify-content: space-between;
+            padding: 30px 20px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.7);
+            border: 1px solid rgba(255,255,255,0.15);
         }
 
-        /* Front Face */
+        /* Front Styling */
         .card-front {
-            background: linear-gradient(135deg, #222, #333);
+            background: linear-gradient(135deg, #1f1f1f, #111111);
         }
 
         .card-front h2 {
-            font-size: 2rem;
-            margin-bottom: 15px;
+            font-size: 2.2rem;
+            font-weight: 800;
             text-transform: uppercase;
+            letter-spacing: 1px;
         }
 
         .bottle-placeholder {
-            width: 70px;
-            height: 160px;
-            background: rgba(255,255,255,0.1);
-            border-radius: 10px;
+            width: 80px;
+            height: 180px;
+            background: rgba(255,255,255,0.05);
+            border-radius: 15px;
             display: flex;
             align-items: center;
             justify-content: center;
-            border: 2px dashed rgba(255,255,255,0.3);
+            border: 2px dashed rgba(255,255,255,0.2);
             font-size: 0.8rem;
-            text-align: center;
+            color: #888;
         }
 
-        /* Back Face */
+        /* Back Styling */
         .card-back {
-            background: #222;
-            transform: rotateY(180deg); /* Pre-rotates the back side */
-            text-align: center;
+            background: #151515;
+            transform: rotateY(180deg);
             justify-content: center;
         }
 
         .card-back p {
-            font-size: 1.2rem;
-            line-height: 1.6;
+            font-size: 1.4rem;
+            line-height: 1.5;
+            font-weight: 600;
+            text-align: center;
             font-style: italic;
+            padding: 10px;
         }
 
-        /* Brand Specific Colors & Themes */
-        .coca-cola .card-front h2 { color: #df0000; }
-        .coca-cola .card-back { border-color: #df0000; background: radial-gradient(#df0000, #4a0000); }
+        /* Brand Colors & Glows */
+        .coca-cola .card-front h2 { color: #e60000; text-shadow: 0 0 15px rgba(230,0,0,0.3); }
+        .coca-cola .card-back { border-color: #e60000; background: radial-gradient(circle, #cc0000 0%, #3a0000 100%); }
         
-        .sprite .card-front h2 { color: #00A859; }
-        .sprite .card-back { border-color: #00A859; background: radial-gradient(#00A859, #004a27); }
+        .sprite .card-front h2 { color: #00b359; text-shadow: 0 0 15px rgba(0,179,89,0.3); }
+        .sprite .card-back { border-color: #00b359; background: radial-gradient(circle, #00994d 0%, #00331a 100%); }
 
-        .fanta .card-front h2 { color: #f7931e; }
-        .fanta .card-back { border-color: #f7931e; background: radial-gradient(#f7931e, #7c4400); }
+        .fanta .card-front h2 { color: #ff8000; text-shadow: 0 0 15px rgba(255,128,0,0.3); }
+        .fanta .card-back { border-color: #ff8000; background: radial-gradient(circle, #e67300 0%, #4d2600 100%); }
 
-        .stoney .card-front h2 { color: #7A4B1B; }
-        .stoney .card-back { border-color: #7A4B1B; background: radial-gradient(#7A4B1B, #301b07); }
+        .stoney .card-front h2 { color: #96602d; text-shadow: 0 0 15px rgba(150,96,45,0.3); }
+        .stoney .card-back { border-color: #96602d; background: radial-gradient(circle, #7a4e24 0%, #2b1b0c 100%); }
 
-        .krest .card-front h2 { color: #e2e721; }
-        .krest .card-back { border-color: #e2e721; background: radial-gradient(#b3b70e, #3a3b02); color: #000; }
-
-        /* Navigation Buttons */
-        .nav-buttons {
-            display: flex;
-            gap: 20px;
-        }
-
-        button {
-            background: #fff;
-            color: #000;
-            border: none;
-            padding: 12px 24px;
-            font-size: 1rem;
-            font-weight: bold;
-            border-radius: 25px;
-            cursor: pointer;
-            transition: 0.3s ease;
-            box-shadow: 0 5px 15px rgba(255,255,255,0.1);
-        }
-
-        button:hover {
-            background: #df0000;
-            color: #fff;
-            transform: translateY(-2px);
-        }
-        
-        .hint {
-            margin-top: 15px;
-            font-size: 0.85rem;
-            color: #777;
-        }
-    </style>
-</head>
-<body>
-
-    <h1>Beverage Zone</h1>
-
-    <div class="scene">
-        <div class="carousel">
-            
-            <div class="card-container coca-cola" onclick="toggleFlip(this)">
-                <div class="card-face card-front">
-                    <h2>Coca-Cola</h2>
-                    <div class="bottle-placeholder">[ Bottle Image ]</div>
-                </div>
-                <div class="card-face card-back">
-                    <p>"Real Magic.<br>Taste the Feeling!"</p>
-                </div>
-            </div>
-
-            <div class="card-container sprite" onclick="toggleFlip(this)">
-                <div class="card-face card-front">
-                    <h2>Sprite</h2>
-                    <div class="bottle-placeholder">[ Bottle Image ]</div>
-                </div>
-                <div class="card-face card-back">
-                    <p>"Heat Happens.<br>Stay Cool."</p>
-                </div>
-            </div>
-
-            <div class="card-container fanta" onclick="toggleFlip(this)">
-                <div class="card-face card-front">
-                    <h2>Fanta</h2>
-                    <div class="bottle-placeholder">[ Bottle Image ]</div>
-                </div>
-                <div class="card-face card-back">
-                    <p>"Wanta Fanta?<br>Be More Than One Flavor!"</p>
-                </div>
-            </div>
-
-            <div class="card-container stoney" onclick="toggleFlip(this)">
-                <div class="card-face card-front">
-                    <h2>Stoney</h2>
-                    <div class="bottle-placeholder">[ Bottle Image ]</div>
-                </div>
-                <div class="card-face card-back">
-                    <p>"Kwenda Na Nyuki!<br>Feel the Ginger Kick."</p>
-                </div>
-            </div>
-
-            <div class="card-container krest" onclick="toggleFlip(this)">
-                <div class="card-face card-front">
-                    <h2>Krest</h2>
-                    <div class="bottle-placeholder">[ Bottle Image ]</div>
-                </div>
-                <div class="card-face card-back">
-                    <p>"The Sharp,<br>Bitter Lemon Mixer."</p>
-                </div>
-            </div>
-
-        </div>
-    </div>
-
-    <div class="nav-buttons">
-        <button onclick="rotateCarousel('prev')">← Prev</button>
-        <button onclick="rotateCarousel('next')">Next →</button>
-    </div>
-    
-    <p class="hint">Tip: Click on a card to flip it and read the advert text!</p>
-
-    <script>
-        const carousel = document.querySelector('.carousel');
-        const cards = document.querySelectorAll('.card-container');
-        const totalCards = cards.length;
-        let selectedIndex = 0;
-
-        // Calculate the geometry angle for 5 items (360 degrees / 5 = 72 degrees)
-        const angle = 360 / totalCards;
-        
-        // Distance from center to push the cards outwards to form a ring
-        // Formula approx: (cardWidth / 2) / tan(angle / 2)
-        const tz = Math.round((280 / 2) / Math.tan(Math.PI / totalCards));
-
-        // Position cards initially in a 3D circle ring
-        function setupCarousel() {
-            cards.forEach((card, i) => {
-                const cardAngle = angle * i;
-                // Cache the original base rotation for carousel rotation math later
-                card.dataset.baseRotation = cardAngle;
-                card.style.transform = `rotateY(${cardAngle}deg) translateZ(${tz}px)`;
-            });
-        }
-
-        function rotateCarousel(direction) {
-            // Unflip any flipped cards when moving to next item
-            cards.forEach(card => card.classList.remove('flipped'));
-
-            if (direction === 'next') {
-                selectedIndex++;
-            } else {
-                selectedIndex--;
-            }
-            
-            // Rotate the parent carousel container backwards to bring the target card to front
-            const carouselAngle = -angle * selectedIndex;
-            carousel.style.transform = `translateZ(-${tz}px) rotateY(${carouselAngle}deg)`;
-        }
-
-        function toggleFlip(cardElement) {
-            // Get current active face index to ensure they only flip the one in the front view
-            const currentBaseAngle = parseFloat(cardElement.dataset.baseRotation);
-            
-            // Toggle flip class
-            if (cardElement.classList.contains('flipped')) {
-                cardElement.classList.remove('flipped');
-                cardElement.style.transform = `rotateY(${currentBaseAngle}deg) translateZ(${tz}px)`;
-            } else {
-                cardElement.classList.add('flipped');
-                // Adds 180 degrees to its active rotational position to show back side perfectly
-                cardElement.style.transform = `rotateY(${currentBaseAngle + 180}deg) translateZ(${tz}px)`;
-            }
-        }
-
-        // Initialize position on load
-        setupCarousel();
-        // Shift carousel back slightly to align perspective origin gracefully
-        carousel.style.transform = `translateZ(-${tz}px) rotateY(0deg)`;
-    </script>
-</body>
-</html>
+        .krest .card-front h2 { color: #eef211; text-shadow:
